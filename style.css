@@ -6,140 +6,112 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Math Mode Selection */
-.math-mode-selection {
-    position: fixed;
-    top: 0;
-    left: 0;
+/* ========================================
+   Math Mode Selection - Inline Version
+   ======================================== */
+
+.math-mode-selection-inline {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
-    padding: 20px;
-    transition: opacity 0.5s ease;
+    padding: 10px;
+    transition: opacity 0.3s ease;
 }
 
-.math-mode-selection:not(.active) {
+.math-mode-selection-inline:not(.active) {
     display: none;
 }
 
-.mode-selection-container {
-    background: linear-gradient(135deg, #ffffff 0%, #e8ecef 100%);
-    border-radius: 20px;
-    padding: 30px;
-    max-width: 1200px;
+.mode-selection-container-inline {
     width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    max-width: 100%;
     text-align: center;
 }
 
-.mode-selection-container h2 {
-    color: #4b6cb7;
-    margin-bottom: 10px;
-    font-size: 2em;
+.mode-selection-container-inline h2 {
+    font-size: clamp(1.2em, 3vw, 1.6em);
+    margin-bottom: 8px;
 }
 
 .selection-subtitle {
-    color: #6c757d;
-    margin-bottom: 30px;
-    font-size: 1.1em;
+    font-size: clamp(0.85em, 2vw, 1em);
+    opacity: 0.8;
+    margin-bottom: 15px;
 }
 
-.math-modes-grid {
+/* Grid สำหรับการ์ดโหมด */
+.math-modes-grid-inline {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 5px;
 }
 
+/* การ์ดโหมด */
 .math-mode-card {
-    background: linear-gradient(135deg, #4b6cb7, #182848);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 15px 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    animation: float 3s ease-in-out infinite;
-}
-
-.math-mode-card:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.math-mode-card:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-.math-mode-card:nth-child(4) {
-    animation-delay: 0.6s;
-}
-
-.math-mode-card:nth-child(5) {
-    animation-delay: 0.8s;
-}
-
-.math-mode-card:nth-child(6) {
-    animation-delay: 1s;
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 160px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .math-mode-card:hover {
-    transform: translateY(-5px) scale(1.03);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.math-mode-card:active {
+    transform: scale(0.98);
 }
 
 .math-mode-card.selected {
     background: linear-gradient(135deg, #28a745, #20c997);
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.5);
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6);
 }
 
 .mode-icon {
-    font-size: 3em;
-    margin-bottom: 15px;
+    font-size: 2.5em;
+    margin-bottom: 10px;
 }
 
 .math-mode-card h3 {
-    margin-bottom: 10px;
-    font-size: 1.3em;
+    font-size: 1.1em;
+    margin-bottom: 8px;
 }
 
 .mode-description {
-    font-size: 0.9em;
-    opacity: 0.9;
-    margin-bottom: 15px;
+    font-size: 0.85em;
+    opacity: 0.95;
+    margin-bottom: 10px;
+    line-height: 1.3;
     min-height: 40px;
+    text-align: center;
 }
 
 .difficulty-badge {
     display: inline-block;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8em;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.75em;
     font-weight: bold;
 }
 
 .difficulty-badge.easy {
     background: #28a745;
-    color: white;
 }
 
 .difficulty-badge.medium {
@@ -149,197 +121,117 @@
 
 .difficulty-badge.hard {
     background: #fd7e14;
-    color: white;
 }
 
 .difficulty-badge.challenging {
     background: #dc3545;
-    color: white;
 }
 
-.selected-mode-display {
+/* ส่วนแสดงโหมดที่เลือกและปุ่มเริ่มเกม */
+.selected-mode-display-inline {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    padding-top: 20px;
-    border-top: 2px solid #e9ecef;
+    gap: 10px;
 }
 
 .selected-mode-info {
-    background: linear-gradient(135deg, #4b6cb7, #182848);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 15px 25px;
-    border-radius: 10px;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-weight: bold;
-    font-size: 1.1em;
-    min-width: 300px;
+    font-size: 1em;
+    min-width: 200px;
     text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-#startGameWithMode:disabled {
-    opacity: 0.6;
+/* ปรับปุ่มเริ่มเกม */
+.selected-mode-display-inline .action-btn {
+    min-width: 200px;
+}
+
+.selected-mode-display-inline .action-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
 }
 
-/* Responsive Design for Mode Selection */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .math-modes-grid {
-        display: flex;
-        overflow-x: auto;
-        gap: 15px;
-        margin-bottom: 25px;
-        padding: 10px 5px;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        scrollbar-color: #4b6cb7 #f1f1f1;
-    }
-
-    .math-modes-grid::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .math-modes-grid::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-        margin: 0 10px;
-    }
-
-    .math-modes-grid::-webkit-scrollbar-thumb {
-        background: #4b6cb7;
-        border-radius: 10px;
-    }
-
-    .math-modes-grid::-webkit-scrollbar-thumb:hover {
-        background: #3a5998;
+    .math-modes-grid-inline {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        max-height: 45vh;
     }
 
     .math-mode-card {
-        flex: 0 0 auto;
-        width: 280px;
-        scroll-snap-align: start;
-        min-height: 180px;
-        padding: 15px;
-        animation: none; /* ปิด animation บนมือถือเพื่อประสิทธิภาพ */
-    }
-
-    .math-mode-card:active {
-        transform: scale(0.98);
-    }
-
-    .mode-selection-container {
-        padding: 20px 15px;
-    }
-
-    .mode-selection-container h2 {
-        font-size: 1.5em;
-        margin-bottom: 8px;
-    }
-
-    .selection-subtitle {
-        font-size: 0.9em;
-        margin-bottom: 20px;
-    }
-
-    .selected-mode-info {
-        min-width: auto;
-        width: 100%;
-        font-size: 1em;
-        padding: 12px 20px;
-    }
-
-    /* เพิ่ม indicator สำหรับแสดงว่าสามารถเลื่อนได้ */
-    .math-modes-grid::after {
-        content: "";
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 20px;
-        height: 20px;
-        background: linear-gradient(90deg, transparent, #ffffff);
-        pointer-events: none;
-        opacity: 0.7;
-    }
-}
-
-/* สำหรับหน้าจอขนาดเล็กมาก */
-@media (max-width: 480px) {
-    .math-modes-grid {
-        gap: 12px;
-        padding: 8px 3px;
-    }
-
-    .math-mode-card {
-        width: 220px;
-        min-height: 160px;
-        padding: 12px;
+        min-height: 140px;
+        padding: 12px 8px;
     }
 
     .mode-icon {
-        font-size: 2.5em;
-        margin-bottom: 10px;
+        font-size: 2em;
     }
 
     .math-mode-card h3 {
-        font-size: 1.1em;
-        margin-bottom: 8px;
+        font-size: 1em;
     }
 
     .mode-description {
         font-size: 0.8em;
-        margin-bottom: 12px;
         min-height: 35px;
-    }
-
-    .difficulty-badge {
-        padding: 4px 10px;
-        font-size: 0.75em;
-    }
-
-    .mode-selection-container {
-        padding: 15px 10px;
-    }
-
-    .mode-selection-container h2 {
-        font-size: 1.3em;
-    }
-
-    .selection-subtitle {
-        font-size: 0.85em;
     }
 }
 
-/* สำหรับการหมุนหน้าจอแนวนอนบนมือถือ */
-@media (max-width: 768px) and (orientation: landscape) {
-    .math-modes-grid {
-        gap: 10px;
+@media (max-width: 480px) {
+    .mode-selection-container-inline h2 {
+        font-size: 1.1em;
+    }
+
+    .math-modes-grid-inline {
+        gap: 8px;
+        max-height: 40vh;
     }
 
     .math-mode-card {
-        width: 220px;
-        min-height: 140px;
+        min-height: 130px;
+        padding: 10px 6px;
     }
 
-    .mode-selection-container {
-        max-height: 85vh;
+    .mode-icon {
+        font-size: 1.8em;
+    }
+
+    .mode-description {
+        font-size: 0.75em;
+    }
+
+    .selected-mode-info {
+        font-size: 0.9em;
+        min-width: 180px;
+        padding: 8px 15px;
     }
 }
 
-/* เพิ่มการแสดงผลเมื่อมีการเลื่อน */
-.math-modes-grid.scrolling {
-    cursor: grabbing;
-    cursor: -webkit-grabbing;
+/* ปรับ scrollbar สำหรับ grid */
+.math-modes-grid-inline::-webkit-scrollbar {
+    width: 6px;
 }
 
-/* ปรับปรุงการแสดงผลเมื่อมีการ์ดถูกเลือกบนมือถือ */
-@media (max-width: 768px) {
-    .math-mode-card.selected {
-        transform: scale(1.02);
-        box-shadow: 0 0 15px rgba(40, 167, 69, 0.6);
-    }
+.math-modes-grid-inline::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.math-modes-grid-inline::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 10px;
+}
+
+.math-modes-grid-inline::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.7);
 }
 
 /* ธีมพื้นฐาน (Default) - สีน้ำเงิน */
@@ -1189,8 +1081,8 @@ body.theme-nature .game-over-stats {
 }
 
 .powerup-cost {
-    font-size: 0.75em;
-    opacity: 0.9;
+    font-size: 0.8em;
+    opacity: 0.8;
 }
 
 /* Common Elements */
@@ -1230,10 +1122,10 @@ button:active {
 .game-board-wrapper {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
     overflow-x: hidden;
     position: relative;
+    flex-wrap: wrap;
+    align-content: center;
 }
 
 .game-board {
@@ -1337,6 +1229,7 @@ button:active {
 }
 
 @keyframes match {
+
     0%,
     100% {
         transform: scale(1);
@@ -1352,6 +1245,7 @@ button:active {
 }
 
 @keyframes shake {
+
     0%,
     100% {
         transform: translateX(0);
@@ -1377,6 +1271,7 @@ button:active {
 }
 
 @keyframes pulse {
+
     0%,
     100% {
         transform: scale(1);
@@ -1638,6 +1533,7 @@ button:active {
 }
 
 @keyframes starShine {
+
     0%,
     100% {
         transform: scale(1);
@@ -1648,24 +1544,324 @@ button:active {
     }
 }
 
-/* Progress Bar */
+/* ========================================
+   PROGRESS BAR IMPROVEMENTS
+   ======================================== */
+
 .progress-bar {
     width: 100%;
-    height: 20px;
-    background: #d1d8e0;
-    border-radius: 8px;
-    overflow: hidden;
+    height: 25px;
+    /* เพิ่มความสูงให้มากขึ้น */
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: visible;
+    /* เปลี่ยนจาก hidden เป็น visible */
     margin: 12px 0;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .progress-fill {
     height: 100%;
-    transition: width 0.5s;
+    transition: width 0.5s ease-in-out;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
+    font-size: 0.75em;
+    font-weight: bold;
+    border-radius: 10px;
+    position: relative;
+    min-width: 80px;
+    /* ความกว้างขั้นต่ำเพื่อแสดงข้อความ */
+    white-space: nowrap;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+/* สำหรับ progress bar ที่แคบเกินไป ให้แสดงข้อความด้านนอก */
+.progress-fill::after {
+    content: attr(data-text);
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateX(100%) translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.progress-bar:hover .progress-fill::after {
+    opacity: 1;
+}
+
+/* สำหรับมือถือ */
+@media (max-width: 768px) {
+    .progress-bar {
+        height: 22px;
+    }
+
+    .progress-fill {
+        font-size: 0.7em;
+        min-width: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    .progress-bar {
+        height: 20px;
+    }
+
+    .progress-fill {
+        font-size: 0.65em;
+        min-width: 60px;
+        padding: 0 6px;
+    }
+
+    .progress-fill::after {
+        font-size: 0.65em;
+        padding: 3px 6px;
+    }
+}
+
+/* สีพิเศษสำหรับด่านสูงๆ */
+.progress-fill.epic {
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    box-shadow: 0 2px 8px rgba(106, 17, 203, 0.4);
+}
+
+.progress-fill.legendary {
+    background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+}
+
+.progress-fill.mythic {
+    background: linear-gradient(90deg, #833ab4, #fd1d1d, #fcb045);
+    box-shadow: 0 2px 8px rgba(131, 58, 180, 0.4);
+    animation: rainbow 3s infinite linear;
+}
+
+@keyframes rainbow {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+
+
+/* =================================================================================================================== */
+
+/* ========================================
+   DAILY REWARDS STYLES
+   ======================================== */
+
+/* Notification พิเศษสำหรับ Daily Rewards */
+.notification.daily-reward {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-left: 4px solid gold;
+    min-width: 300px;
+    padding: 15px 20px;
+}
+
+.notification.daily-reward .reward-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.notification.daily-reward .reward-amount {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: gold;
+    margin-bottom: 5px;
+}
+
+.notification.daily-reward .reward-streak {
+    font-size: 0.9em;
+    opacity: 0.9;
+    color: #ffd700;
+}
+
+/* ========================================
+   DAILY REWARDS STYLES - FIXED
+   ======================================== */
+
+/* Particle effect สำหรับเหรียญ */
+.coin-particle {
+    animation: coinFall 1.5s ease-in forwards !important;
+}
+
+@keyframes coinFall {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--random-x1, 0px)),
+                calc(-50% - 50px)) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--random-x2, 0px)),
+                calc(-50% + 200px)) scale(0.5) rotate(360deg);
+    }
+}
+
+/* หรือใช้วิธีที่ง่ายกว่า - สร้างหลาย keyframes */
+@keyframes coinFall1 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-30%, -70%) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-80%, 150%) scale(0.5) rotate(360deg);
+    }
+}
+
+@keyframes coinFall2 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-10%, -80%) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-20%, 180%) scale(0.5) rotate(360deg);
+    }
+}
+
+@keyframes coinFall3 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-70%, -60%) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(60%, 170%) scale(0.5) rotate(360deg);
+    }
+}
+
+@keyframes coinFall4 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(20%, -90%) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(80%, 160%) scale(0.5) rotate(360deg);
+    }
+}
+
+@keyframes coinFall5 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(40%, -70%) scale(1.2) rotate(180deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-40%, 190%) scale(0.5) rotate(360deg);
+    }
+}
+
+/* Streak indicator ในหน้า Settings */
+.streak-container {
+    background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.streak-count {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.streak-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.streak-bonus {
     font-size: 0.8em;
+    margin-top: 5px;
+    opacity: 0.8;
+}
+
+/* Daily Rewards History */
+.rewards-history {
+    margin: 15px 0;
+}
+
+.rewards-history h4 {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.reward-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 0.85em;
+}
+
+.reward-date {
+    opacity: 0.8;
+}
+
+.reward-amount {
+    color: gold;
     font-weight: bold;
 }
 
@@ -1699,7 +1895,10 @@ button:active {
     margin-top: 12px;
 }
 
-/* Notification */
+/* ========================================
+   MODERN NOTIFICATION SYSTEM - IMPROVED
+   ======================================== */
+
 #notification-container {
     position: fixed;
     top: 0;
@@ -1708,70 +1907,253 @@ button:active {
     height: 100%;
     pointer-events: none;
     z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
 }
 
 .notification {
-    position: absolute;
-    top: 10%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(24, 40, 72, 0.85);
+    position: relative;
+    background: rgba(24, 40, 72, 0.95);
     color: #ffffff;
-    padding: 6px 20px;
-    border-radius: 10px;
+    padding: 12px 20px;
+    border-radius: 12px;
     font-weight: bold;
     font-size: 1em;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    animation: fadeInOut 2s ease-in-out;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     text-align: center;
-    min-width: 80%;
+    min-width: 280px;
+    max-width: 90%;
+    margin-bottom: 10px;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes fadeInOut {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-    }
+.notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
 
-    20% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-
-    40% {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    80% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-    }
+.notification.hide {
+    transform: translateY(-20px);
+    opacity: 0;
 }
 
 .notification.success {
-    background: rgba(40, 167, 69, 0.85);
-    border-left: 3px solid #28a745;
+    background: rgba(40, 167, 69, 0.95);
+    border-left: 4px solid #28a745;
 }
 
 .notification.warning {
-    background: rgba(230, 126, 34, 0.85);
-    color: #ffffff;
-    border-left: 3px solid #d35400;
+    background: rgba(230, 126, 34, 0.95);
+    border-left: 4px solid #d35400;
 }
 
 .notification.error {
-    background: rgba(192, 57, 43, 0.85);
-    border-left: 3px solid #c0392b;
+    background: rgba(192, 57, 43, 0.95);
+    border-left: 4px solid #c0392b;
 }
 
 .notification.info {
-    background: rgba(75, 108, 183, 0.85);
-    border-left: 3px solid #4b6cb7;
+    background: rgba(75, 108, 183, 0.95);
+    border-left: 4px solid #4b6cb7;
+}
+
+.notification.achievement {
+    background: rgba(255, 193, 7, 0.95);
+    border-left: 4px solid #ffc107;
+    color: #212529;
+}
+
+.notification-icon {
+    font-size: 1.3em;
+    flex-shrink: 0;
+}
+
+.notification-text {
+    flex: 1;
+    text-align: left;
+}
+
+/* Achievement Unlocked Popup */
+.achievement-unlocked {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1002;
+    animation: achievementSlideIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.achievement-popup {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 300px;
+    border: 2px solid gold;
+    animation: achievementPulse 2s infinite;
+}
+
+.achievement-popup .achievement-icon {
+    font-size: 3em;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.achievement-content {
+    flex: 1;
+}
+
+.achievement-title {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.achievement-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.achievement-rarity {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+/* Rarity Colors for Achievements */
+.achievement-unlocked.common .achievement-popup {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-color: #28a745;
+}
+
+.achievement-unlocked.uncommon .achievement-popup {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    border-color: #17a2b8;
+}
+
+.achievement-unlocked.rare .achievement-popup {
+    background: linear-gradient(135deg, #6f42c1, #5a2d9c);
+    border-color: #6f42c1;
+}
+
+.achievement-unlocked.epic .achievement-popup {
+    background: linear-gradient(135deg, #e83e8c, #c2176c);
+    border-color: #e83e8c;
+}
+
+.achievement-unlocked.mythic .achievement-popup {
+    background: linear-gradient(135deg, #fd7e14, #e55a00);
+    border-color: #fd7e14;
+    animation: mythicGlow 2s infinite;
+}
+
+/* Animations */
+@keyframes achievementSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.8);
+    }
+
+    70% {
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes achievementPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+}
+
+@keyframes mythicGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(253, 126, 20, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(253, 126, 20, 0.9);
+    }
+}
+
+@keyframes slideOutNotification {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+/* Responsive Design for Notifications */
+@media (max-width: 768px) {
+    #notification-container {
+        padding-top: 10px;
+    }
+
+    .notification {
+        min-width: 250px;
+        max-width: 85%;
+        padding: 10px 15px;
+        font-size: 0.9em;
+    }
+
+    .achievement-popup {
+        min-width: 250px;
+        padding: 15px;
+    }
+
+    .achievement-popup .achievement-icon {
+        font-size: 2.5em;
+    }
+}
+
+@media (max-width: 480px) {
+    .notification {
+        min-width: 200px;
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+
+    .achievement-popup {
+        min-width: 200px;
+        padding: 12px;
+    }
+
+    .achievement-popup .achievement-icon {
+        font-size: 2em;
+    }
+
+    .achievement-name {
+        font-size: 1em;
+    }
 }
 
 /* Particles */
@@ -1779,7 +2161,7 @@ button:active {
     position: fixed;
     width: 7px;
     height: 7px;
-    border-radius: 50%;
+    border-radius: 0%;
     pointer-events: none;
     z-index: 9999;
     opacity: 0;
@@ -1805,7 +2187,7 @@ button:active {
 
     .powerup-mobile {
         padding: 8px 5px;
-        font-size: 10px;
+        font-size: 16px;
         width: 120px;
     }
 
@@ -2001,6 +2383,7 @@ button:active {
 }
 
 @keyframes matchPulse {
+
     0%,
     100% {
         transform: scale(1);
@@ -2020,6 +2403,7 @@ button:active {
 }
 
 @keyframes shuffleMove {
+
     0%,
     100% {
         transform: translateX(0) translateY(0);
@@ -2035,5 +2419,325 @@ button:active {
 
     75% {
         transform: translateX(5px) translateY(-5px) rotate(3deg);
+    }
+}
+
+/* ========================================
+   POWERUP EFFECTS
+   ======================================== */
+
+/* เอฟเฟกต์สำหรับการ์ดที่ถูกเปิดด้วยคำใบ้ */
+.card.hint {
+    animation: hintPulse 2s ease-in-out;
+    box-shadow: 0 0 20px gold !important;
+}
+
+@keyframes hintPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px gold;
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px gold;
+    }
+}
+
+/* เอฟเฟกต์เมื่อใช้ไอเทมหยุดเวลา */
+body.freeze-effect {
+    animation: freezeGlow 5s ease-in-out;
+}
+
+@keyframes freezeGlow {
+
+    0%,
+    100% {
+        filter: hue-rotate(0deg);
+    }
+
+    50% {
+        filter: hue-rotate(180deg) brightness(1.1);
+    }
+}
+
+/* เอฟเฟกต์สำหรับการ์ดที่ถูกลบด้วยไอเทม */
+.card.removed {
+    animation: removeCard 0.5s ease-out forwards;
+}
+
+@keyframes removeCard {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* ปรับปรุงสไตล์ปุ่มไอเทมที่ disabled */
+.powerup.disabled,
+.powerup-mobile.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+}
+
+.powerup.disabled:hover,
+.powerup-mobile.disabled:hover {
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* เอฟเฟกต์เมื่อกดปุ่มไอเทม */
+.powerup:active:not(.disabled),
+.powerup-mobile:active:not(.disabled) {
+    animation: powerupClick 0.3s ease;
+}
+
+@keyframes powerupClick {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.95);
+    }
+}
+
+/* ========================================
+   FOOTER STYLES - MODERN REDESIGN
+   ======================================== */
+
+.game-footer {
+    background: linear-gradient(135deg, rgba(24, 40, 72, 0.95), rgba(75, 108, 183, 0.95));
+    color: #ffffff;
+    padding: 30px 20px 20px;
+    margin-top: 190px;
+    border-top: 3px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.game-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        #667eea 20%, 
+        #764ba2 50%, 
+        #667eea 80%, 
+        transparent 100%
+    );
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.footer-section {
+    padding: 15px;
+}
+
+.footer-section h4 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    font-weight: bold;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, #ffd700, transparent);
+}
+
+.footer-section p {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    opacity: 0.9;
+    font-size: 0.9em;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-links a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-links a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.link-icon {
+    font-size: 1.1em;
+    opacity: 0.8;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 30px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.footer-bottom p {
+    margin-bottom: 5px;
+    opacity: 0.8;
+    font-size: 0.85em;
+}
+
+.footer-bottom p:first-child {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Background decoration */
+.game-footer::after {
+    content: '🎮';
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    font-size: 8em;
+    opacity: 0.05;
+    transform: rotate(15deg);
+    z-index: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-footer {
+        padding: 25px 15px 15px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .footer-section {
+        padding: 10px;
+        text-align: center;
+    }
+    
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .footer-links a:hover {
+        transform: translateY(-2px);
+    }
+    
+    .game-footer::after {
+        font-size: 6em;
+        bottom: -15px;
+        right: -15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-footer {
+        padding: 20px 10px 10px;
+    }
+    
+    .footer-section h4 {
+        font-size: 1.1em;
+    }
+    
+    .footer-section p {
+        font-size: 0.85em;
+    }
+    
+    .footer-links a {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+    
+    .game-footer::after {
+        font-size: 4em;
+        bottom: -10px;
+        right: -10px;
+    }
+}
+
+/* Animation for footer elements */
+@keyframes fadeInUpFooter {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.footer-section {
+    animation: fadeInUpFooter 0.6s ease-out backwards;
+}
+
+.footer-section:nth-child(1) { animation-delay: 0.1s; }
+.footer-section:nth-child(2) { animation-delay: 0.2s; }
+.footer-section:nth-child(3) { animation-delay: 0.3s; }
+.footer-section:nth-child(4) { animation-delay: 0.4s; }
+
+/* Hover effects for desktop */
+@media (min-width: 1024px) {
+    .footer-section:hover h4 {
+        color: #ffffff;
+        transition: color 0.3s ease;
+    }
+    
+    .footer-section:hover h4::after {
+        width: 100%;
+        transition: width 0.3s ease;
     }
 }

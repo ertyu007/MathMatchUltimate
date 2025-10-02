@@ -1,4 +1,5 @@
-// script.js - Ultimate Edition with Auto Save System
+// script.js - Ultimate Edition with 9999 Levels, Daily Rewards, and Cheat System
+// Full Version - 1900+ lines
 
 // Configuration
 const config = {
@@ -8,6 +9,25 @@ const config = {
         easy: { pairs: 4, time: 60 },
         medium: { pairs: 6, time: 60 },
         hard: { pairs: 8, time: 60 }
+    },
+    // เพิ่มการตั้งค่าสำหรับด่านสูงๆ
+    maxLevel: 9999,
+    scaling: {
+        maxPairs: 20,
+        minTime: 30,
+        levelCap: 100
+    },
+    // ระบบ Daily Rewards
+    dailyRewards: {
+        baseCoins: 50,
+        streakBonus: 10,
+        maxStreak: 7,
+        streakMultiplier: 2,
+        specialDays: {
+            7: 100,
+            30: 500,
+            100: 1000
+        }
     }
 };
 
@@ -28,8 +48,6 @@ let gameState = {
     totalGames: 0,
     perfectClears: 0,
     isGameActive: false,
-
-    // สถิติใหม่สำหรับ achievements
     powerupsUsed: 0,
     wrongMatches: 0,
     totalTimeFreeze: 0,
@@ -42,7 +60,12 @@ let gameState = {
         fractions: 0,
         mixed: 0
     },
-    startTime: 0
+    startTime: 0,
+    // ระบบ Daily Rewards
+    lastLoginDate: null,
+    streakCount: 0,
+    totalLogins: 0,
+    claimedRewards: []
 };
 
 let cards = [];
@@ -54,6 +77,9 @@ let canFlip = true;
 let freezeTime = false;
 let audioCtx = null;
 let lastTime = null;
+
+// ตัวแปรสำหรับจัดการคิวการแจ้งเตือน
+let isShowingNotification = false;
 let notificationQueue = [];
 
 // DOM Selectors
@@ -88,123 +114,213 @@ const selectors = {
     achievementsContainer: document.getElementById('achievementsContainer'),
     notificationContainer: document.getElementById('notification-container'),
     powerupsToggle: document.getElementById('powerupsToggle'),
-    powerupsContainer: document.getElementById('powerupsContainer')
+    powerupsContainer: document.getElementById('powerupsContainer'),
+    dailyRewardsInfo: document.getElementById('dailyRewardsInfo')
 };
 
-// ฐานข้อมูลโหมดคณิตศาสตร์
+// ฐานข้อมูลโหมดคณิตศาสตร์ ระดับมัธยมศึกษา
 const mathModesDB = {
-    basic: {
-        name: "พื้นฐาน",
-        icon: "➕",
+    m1: {
+        name: "มัธยม 1",
+        icon: "🔢",
         difficulty: "easy",
         questions: [
-            { q: "2 + 3", a: "5" },
-            { q: "10 - 4", a: "6" },
-            { q: "3 × 2", a: "6" },
-            { q: "8 ÷ 4", a: "2" },
-            { q: "5 + 4", a: "9" },
-            { q: "12 - 3", a: "9" },
-            { q: "4 × 2", a: "8" },
-            { q: "16 ÷ 2", a: "8" },
-            { q: "7 + 8", a: "15" },
-            { q: "20 - 7", a: "13" },
-            { q: "6 × 3", a: "18" },
-            { q: "18 ÷ 3", a: "6" }
+            // จำนวนเต็ม
+            { q: "12 + (-8)", a: "4" },
+            { q: "(-15) - (-7)", a: "-8" },
+            { q: "(-4) × 6", a: "-24" },
+            { q: "(-18) ÷ (-3)", a: "6" },
+            { q: "| -9 | + | 5 |", a: "14" },
+
+            // เศษส่วนและทศนิยม
+            { q: "2/3 + 1/4", a: "11/12" },
+            { q: "0.75 × 0.4", a: "0.3" },
+            { q: "3.6 ÷ 0.6", a: "6" },
+            { q: "5/8 - 1/3", a: "7/24" },
+            { q: "0.25 + 0.125", a: "0.375" },
+
+            // พีชคณิตพื้นฐาน
+            { q: "2x + 5 = 15, x = ?", a: "5" },
+            { q: "3(y - 2) = 12, y = ?", a: "6" },
+            { q: "4a + 2a - a", a: "5a" },
+            { q: "7b - 3b + 2b", a: "6b" },
+
+            // เรขาคณิตพื้นฐาน
+            { q: "สามเหลี่ยมมุมฉาก มีมุมฉากกี่องศา", a: "90" },
+            { q: "สี่เหลี่ยมผืนผ้า กว้าง 5 ซม. ยาว 8 ซม. พื้นที่เท่าไร", a: "40" },
+            { q: "วงกลมรัศมี 7 ซม. เส้นรอบวงประมาณเท่าไร (π≈3.14)", a: "43.96" }
         ]
     },
-    advanced: {
-        name: "ขั้นสูง",
-        icon: "🔢",
+    m2: {
+        name: "มัธยม 2",
+        icon: "📐",
+        difficulty: "easy",
+        questions: [
+            // สมการเชิงเส้น
+            { q: "2x + 3 = 4x - 5, x = ?", a: "4" },
+            { q: "3(2y + 1) = 4(y - 2), y = ?", a: "-5.5" },
+            { q: "(x/3) + 2 = 5, x = ?", a: "9" },
+
+            // อัตราส่วนและร้อยละ
+            { q: "อัตราส่วน 3:5 เท่ากับกี่เปอร์เซ็นต์", a: "60" },
+            { q: "ลดราคา 20% จาก 500 บาท เหลือกี่บาท", a: "400" },
+            { q: "จำนวน 75 เป็นกี่เปอร์เซ็นต์ของ 300", a: "25" },
+
+            // พีธากอรัส
+            { q: "สามเหลี่ยมมุมฉาก ด้านประกอบมุมฉาก 3 และ 4 ด้านตรงข้ามมุมฉากยาวเท่าไร", a: "5" },
+            { q: "สามเหลี่ยมมุมฉาก ด้านตรงข้ามมุมฉาก 10 ด้านประกอบมุมฉาก 6 อีกด้านยาวเท่าไร", a: "8" },
+
+            // ความน่าจะเป็นพื้นฐาน
+            { q: " tossing a coin, P(head) = ?", a: "0.5" },
+            { q: "ลูกเต๋า 1 ลูก ความน่าจะเป็นที่จะออกเลขคู่", a: "0.5" },
+            { q: "ไพ่ 1 ใบ จาก 52 ใบ ความน่าจะเป็นได้โพดำ", a: "0.25" },
+
+            // สถิติพื้นฐาน
+            { q: "ข้อมูล 2, 4, 6, 8, 10 ค่าเฉลี่ยเท่าไร", a: "6" },
+            { q: "ข้อมูล 1, 3, 5, 7, 9 มัธยฐานเท่าไร", a: "5" }
+        ]
+    },
+    m3: {
+        name: "มัธยม 3",
+        icon: "📊",
         difficulty: "medium",
         questions: [
-            { q: "5²", a: "25" },
-            { q: "√16", a: "4" },
-            { q: "3³", a: "27" },
-            { q: "√25", a: "5" },
-            { q: "2⁴", a: "16" },
-            { q: "√36", a: "6" },
-            { q: "4²", a: "16" },
-            { q: "√49", a: "7" },
-            { q: "6²", a: "36" },
-            { q: "√64", a: "8" },
-            { q: "7²", a: "49" },
-            { q: "√81", a: "9" }
+            // พหุนาม
+            { q: "(2x + 3)(x - 4)", a: "2x² - 5x - 12" },
+            { q: "x² + 5x + 6 แยกตัวประกอบ", a: "(x+2)(x+3)" },
+            { q: "3x² - 12x", a: "3x(x-4)" },
+
+            // สมการกำลังสอง
+            { q: "x² - 5x + 6 = 0, x = ?", a: "2,3" },
+            { q: "2x² + 3x - 2 = 0, x = ?", a: "0.5,-2" },
+            { q: "x² - 9 = 0, x = ?", a: "3,-3" },
+
+            // ระบบสมการ
+            { q: "2x + y = 7, x - y = -1, x = ?, y = ?", a: "2,3" },
+            { q: "3x + 2y = 12, x - y = 1, x = ?, y = ?", a: "2.8,1.8" },
+
+            // ตรีโกณมิติพื้นฐาน
+            { q: "sin 30° = ?", a: "0.5" },
+            { q: "cos 60° = ?", a: "0.5" },
+            { q: "tan 45° = ?", a: "1" },
+
+            // เรขาคณิตวิเคราะห์
+            { q: "จุด (2,3) และ (5,7) ความชันเท่าไร", a: "1.33" },
+            { q: "ระยะระหว่างจุด (1,2) และ (4,6)", a: "5" }
         ]
     },
-    factorial: {
-        name: "แฟกทอเรียล",
-        icon: "❗",
-        difficulty: "hard",
-        questions: [
-            { q: "5!", a: "120" },
-            { q: "3! × 2!", a: "12" },
-            { q: "4!", a: "24" },
-            { q: "6! ÷ 5!", a: "6" },
-            { q: "3!", a: "6" },
-            { q: "4! ÷ 3!", a: "4" },
-            { q: "2! × 3!", a: "12" },
-            { q: "5! ÷ 4!", a: "5" },
-            { q: "0!", a: "1" },
-            { q: "1! × 2!", a: "2" },
-            { q: "7! ÷ 6!", a: "7" },
-            { q: "4! × 2!", a: "48" }
-        ]
-    },
-    constants: {
-        name: "ค่าคงที่",
-        icon: "π",
+    m4: {
+        name: "มัธยม 4",
+        icon: "🧮",
         difficulty: "medium",
         questions: [
-            { q: "π (ประมาณ)", a: "3.14" },
-            { q: "e (ประมาณ)", a: "2.72" },
-            { q: "φ (ประมาณ)", a: "1.62" },
-            { q: "2π (ประมาณ)", a: "6.28" },
-            { q: "π² (ประมาณ)", a: "9.87" },
-            { q: "e² (ประมาณ)", a: "7.39" },
-            { q: "φ² (ประมาณ)", a: "2.62" },
-            { q: "π + e (ประมาณ)", a: "5.86" },
-            { q: "3π (ประมาณ)", a: "9.42" },
-            { q: "2e (ประมาณ)", a: "5.44" },
-            { q: "π × e (ประมาณ)", a: "8.54" },
-            { q: "φ × π (ประมาณ)", a: "5.08" }
+            // จำนวนจริง
+            { q: "√18 + √8", a: "5√2" },
+            { q: "√12 × √3", a: "6" },
+            { q: "∛27 + ∛8", a: "5" },
+
+            // เอกซ์โพเนนเชียลและลอการิทึม
+            { q: "2³ × 2⁴", a: "128" },
+            { q: "5⁰ + 3²", a: "10" },
+            { q: "log₁₀100", a: "2" },
+            { q: "log₂8", a: "3" },
+            { q: "ln e²", a: "2" },
+
+            // ฟังก์ชัน
+            { q: "f(x) = 2x + 3, f(4) = ?", a: "11" },
+            { q: "g(x) = x² - 1, g(-2) = ?", a: "3" },
+            { q: "โดเมนของ f(x) = 1/(x-2)", a: "ℝ-{2}" },
+
+            // เมทริกซ์
+            { q: "[1 2] + [3 4] = ?", a: "[4 6]" },
+            { q: "2 × [2 1] = ?", a: "[4 2]" },
+
+            // ภาคตัดกรวยพื้นฐาน
+            { q: "วงกลม x² + y² = 25 รัศมีเท่าไร", a: "5" }
         ]
     },
-    fractions: {
-        name: "เศษส่วน",
-        icon: "⅓",
+    m5: {
+        name: "มัธยม 5",
+        icon: "📈",
         difficulty: "hard",
         questions: [
-            { q: "1/2 + 1/3", a: "5/6" },
-            { q: "3/4 × 2/3", a: "1/2" },
-            { q: "2/5 + 3/10", a: "7/10" },
-            { q: "5/6 ÷ 2/3", a: "5/4" },
-            { q: "1/4 + 1/2", a: "3/4" },
-            { q: "2/3 × 3/4", a: "1/2" },
-            { q: "3/8 + 1/4", a: "5/8" },
-            { q: "4/5 ÷ 2/5", a: "2" },
-            { q: "1/3 + 1/6", a: "1/2" },
-            { q: "5/8 × 4/5", a: "1/2" },
-            { q: "2/7 + 3/14", a: "1/2" },
-            { q: "3/4 ÷ 1/2", a: "3/2" }
+            // แคลคูลัส
+            { q: "อนุพันธ์ของ f(x) = 3x²", a: "6x" },
+            { q: "อนุพันธ์ของ f(x) = 4x³ - 2x", a: "12x² - 2" },
+            { q: "∫ 2x dx", a: "x² + C" },
+            { q: "∫₀¹ 3x² dx", a: "1" },
+
+            // จำนวนเชิงซ้อน
+            { q: "i² = ?", a: "-1" },
+            { q: "(2 + 3i) + (1 - 2i)", a: "3 + i" },
+            { q: "(1 + i)(1 - i)", a: "2" },
+
+            // เวกเตอร์
+            { q: "|(3,4)| = ?", a: "5" },
+            { q: "จุดสเกลาร์ (2,3)⋅(1,4)", a: "14" },
+
+            // ความน่าจะเป็นขั้นสูง
+            { q: "P(A) = 0.6, P(B) = 0.4, P(A∩B) = 0.2, P(A∪B) = ?", a: "0.8" },
+            { q: "สลับคำว่า MATH ได้กี่วิธี", a: "24" },
+
+            // สถิติ inferential
+            { q: "ข้อมูลปกติ μ=50, σ=10, P(X>60) ≈ ?", a: "0.1587" },
+            { q: "ค่า z เมื่อ x=60, μ=50, σ=10", a: "1" }
         ]
     },
-    mixed: {
-        name: "ผสมผสาน",
-        icon: "🎲",
+    m6: {
+        name: "มัธยม 6",
+        icon: "🎓",
         difficulty: "challenging",
         questions: [
-            { q: "2² + 3!", a: "10" },
-            { q: "√16 × 2!", a: "8" },
-            { q: "π + 2 (ประมาณ)", a: "5.14" },
-            { q: "1/2 × 4!", a: "12" },
-            { q: "3² - 2!", a: "7" },
-            { q: "√25 + 3!", a: "11" },
-            { q: "e × 2 (ประมาณ)", a: "5.44" },
-            { q: "3/4 × 4!", a: "18" },
-            { q: "4² ÷ 2!", a: "8" },
-            { q: "√36 - 3!", a: "0" },
-            { q: "φ + 1 (ประมาณ)", a: "2.62" },
-            { q: "2/3 × 3!", a: "4" }
+            // แคลคูลัสขั้นสูง
+            { q: "อนุพันธ์ของ sin x", a: "cos x" },
+            { q: "อนุพันธ์ของ eˣ", a: "eˣ" },
+            { q: "∫ cos x dx", a: "sin x + C" },
+            { q: "∫ eˣ dx", a: "eˣ + C" },
+            { q: "lim(x→0) sin x / x", a: "1" },
+
+            // อนุกรม
+            { q: "1 + 2 + 3 + ... + n", a: "n(n+1)/2" },
+            { q: "อนุกรมเรขาคณิต 2 + 4 + 8 + ... 10 พจน์", a: "2046" },
+            { q: "ผลรวมอนุกรมอนันต์ 1 + 1/2 + 1/4 + ...", a: "2" },
+
+            // จำนวนเชิงซ้อนขั้นสูง
+            { q: "รากที่สองของ -16", a: "4i, -4i" },
+            { q: "(1 + i)²", a: "2i" },
+            { q: "โมดูลัสของ 3 + 4i", a: "5" },
+
+            // เมทริกซ์ขั้นสูง
+            { q: "ดีเทอร์มิแนนต์ของ [[2,1],[1,3]]", a: "5" },
+            { q: "อินเวอร์สของ [[1,2],[3,4]]", a: "[[-2,1],[1.5,-0.5]]" },
+
+            // ภาคตัดกรวย
+            { q: "พาราโบลา y² = 4px โฟกัสอยู่ที่จุดใด", a: "(p,0)" },
+            { q: "วงรี x²/9 + y²/4 = 1 ความยาวแกนเอก", a: "6" },
+
+            // สมการเชิงอนุพันธ์พื้นฐาน
+            { q: "ผลเฉลยของ dy/dx = 2x", a: "y = x² + C" },
+            { q: "ผลเฉลยของ dy/dx = y", a: "y = Ceˣ" }
+        ]
+    },
+    olympiad: {
+        name: "โอลิมปิก",
+        icon: "🏆",
+        difficulty: "challenging",
+        questions: [
+            // ปัญหาคณิตศาสตร์แข่งขัน
+            { q: "จำนวนวิธีจัดเรียงคำว่า MATHEMATICS", a: "4989600" },
+            { q: "ผลรวมเลข 1 ถึง 100", a: "5050" },
+            { q: "จำนวนเฉพาะที่น้อยกว่า 20", a: "8" },
+            { q: "GCD ของ 48 และ 60", a: "12" },
+            { q: "LCM ของ 12 และ 18", a: "36" },
+            { q: "จำนวนฟีโบนักชีลำดับที่ 6", a: "8" },
+            { q: "sin²θ + cos²θ = ?", a: "1" },
+            { q: "1 + tan²θ = ?", a: "sec²θ" },
+            { q: "สูตรพื้นที่ผิวทรงกลมรัศมี r", a: "4πr²" },
+            { q: "สูตรปริมาตรทรงกลมรัศมี r", a: "(4/3)πr³" },
+            { q: "สูตรพื้นที่สามเหลี่ยมด้านเท่า ด้าน a", a: "(√3/4)a²" },
+            { q: "สูตรพีทาโกรัส", a: "a² + b² = c²" }
         ]
     }
 };
@@ -261,6 +377,21 @@ const achievementsList = [
             );
         }
     },
+
+    // 🔴 ด่านสูงๆ - สำหรับผู้เล่นระดับเทพ
+    { id: 'level_100', name: 'ร้อยด่าน!', icon: '💯', rarity: 'epic', condition: () => gameState.level >= 100 },
+    { id: 'level_500', name: '500 ด่าน!', icon: '🔥', rarity: 'epic', condition: () => gameState.level >= 500 },
+    { id: 'level_1000', name: 'พันด่าน!', icon: '👑', rarity: 'mythic', condition: () => gameState.level >= 1000 },
+    { id: 'level_5000', name: '5 พันด่าน!', icon: '🌌', rarity: 'mythic', condition: () => gameState.level >= 5000 },
+    { id: 'max_level', name: 'MAX LEVEL!', icon: '⚡', rarity: 'mythic', condition: () => gameState.level >= 9999 },
+
+    // 🎁 Daily Rewards Achievements
+    { id: 'daily_7', name: 'นักล่าทราย', icon: '🏖️', rarity: 'uncommon', condition: () => gameState.streakCount >= 7 },
+    { id: 'daily_30', name: 'ขาจรประจำ', icon: '📅', rarity: 'rare', condition: () => gameState.streakCount >= 30 },
+    { id: 'daily_100', name: 'ราชาแห่งความต่อเนื่อง', icon: '👑', rarity: 'epic', condition: () => gameState.streakCount >= 100 },
+    { id: 'login_50', name: 'เพื่อนเก่า', icon: '🤝', rarity: 'uncommon', condition: () => gameState.totalLogins >= 50 },
+    { id: 'login_200', name: 'เพื่อนแท้', icon: '💖', rarity: 'rare', condition: () => gameState.totalLogins >= 200 },
+
     {
         id: 'impossible', name: 'เป็นไปไม่ได้', icon: '🌌', rarity: 'mythic', condition: () => {
             return gameState.level >= 100 &&
@@ -270,6 +401,356 @@ const achievementsList = [
         }
     }
 ];
+
+// =============================================
+// 🎮 OPTIMIZED NOTIFICATION SYSTEM
+// =============================================
+
+// ฟังก์ชันแสดงการแจ้งเตือนเฉพาะที่สำคัญเท่านั้น
+function showImportantNotification(message, type = 'info', icon = null) {
+    if (!selectors.notificationContainer) return;
+
+    // เพิ่มการแจ้งเตือนลงในคิว
+    notificationQueue.push({ message, type, icon });
+
+    // ถ้ายังไม่มีแจ้งเตือนที่กำลังแสดงอยู่ ให้เริ่มแสดง
+    if (!isShowingNotification) {
+        processNotificationQueue();
+    }
+}
+
+// ฟังก์ชันประมวลผลคิวการแจ้งเตือน
+function processNotificationQueue() {
+    if (notificationQueue.length === 0) {
+        isShowingNotification = false;
+        return;
+    }
+
+    isShowingNotification = true;
+    const { message, type, icon } = notificationQueue.shift();
+
+    const notification = document.createElement('div');
+    notification.classList.add('notification', type);
+
+    const notificationId = 'notification-' + Date.now();
+    notification.id = notificationId;
+
+    if (icon) {
+        notification.classList.add('with-icon');
+        notification.innerHTML = `
+            <div class="notification-icon">${icon}</div>
+            <div class="notification-text">${message}</div>
+        `;
+    } else {
+        notification.innerHTML = `<div class="notification-text">${message}</div>`;
+    }
+
+    notification.setAttribute('aria-live', 'assertive');
+    notification.setAttribute('role', 'alert');
+
+    // เพิ่มการแจ้งเตือนลงใน container
+    selectors.notificationContainer.appendChild(notification);
+
+    // เริ่ม animation เข้า
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+
+    // จัดการ animation ออกและลบ
+    setTimeout(() => {
+        notification.classList.remove('show');
+        notification.classList.add('hide');
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+
+            // ประมวลผลการแจ้งเตือนถัดไป
+            setTimeout(() => {
+                processNotificationQueue();
+            }, 300);
+        }, 500);
+    }, 3000);
+}
+
+// ฟังก์ชันแสดง achievement ที่ปลดล็อคพร้อมเอฟเฟกต์
+function showAchievementUnlocked(achievement) {
+    const popup = document.createElement('div');
+    popup.classList.add('achievement-unlocked', achievement.rarity);
+    popup.innerHTML = `
+        <div class="achievement-popup">
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-content">
+                <div class="achievement-title">🏆 ปลดล็อคความสำเร็จ!</div>
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="achievement-rarity">${getRarityText(achievement.rarity)}</div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    // ลบ popup หลังจาก 4 วินาที
+    setTimeout(() => {
+        popup.style.animation = 'slideOutNotification 0.5s ease-in-out forwards';
+        setTimeout(() => {
+            if (popup.parentNode) {
+                popup.parentNode.removeChild(popup);
+            }
+        }, 500);
+    }, 4000);
+
+    // แสดงการแจ้งเตือนปกติด้วยไอคอน
+    showImportantNotification(`ปลดล็อค: ${achievement.name} (${getRarityText(achievement.rarity)})`, 'achievement', achievement.icon);
+    playSound('victory');
+}
+
+// ฟังก์ชันแปลงระดับความหายากเป็นข้อความ
+function getRarityText(rarity) {
+    const rarityMap = {
+        'common': '🟢 ธรรมดา',
+        'uncommon': '🔵 ไม่ธรรมดา',
+        'rare': '🟣 หายาก',
+        'epic': '🟠 เอพิค',
+        'mythic': '🔴 เป็นไปไม่ได้'
+    };
+    return rarityMap[rarity] || rarity;
+}
+
+// =============================================
+// 🎁 DAILY REWARDS SYSTEM
+// =============================================
+
+// ฟังก์ชันตรวจสอบและแจกเหรียญรายวัน
+function checkDailyRewards() {
+    const today = new Date().toDateString();
+
+    // ถ้ายังไม่เคยล็อกอิน
+    if (!gameState.lastLoginDate) {
+        giveDailyReward(today, true);
+        return;
+    }
+
+    const lastLogin = new Date(gameState.lastLoginDate).toDateString();
+
+    // ถ้าเป็นวันใหม่
+    if (today !== lastLogin) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toDateString();
+
+        // ตรวจสอบว่าเป็น consecutive day หรือไม่
+        if (lastLogin === yesterdayStr) {
+            // ล็อกอินต่อเนื่อง
+            gameState.streakCount++;
+        } else {
+            // หายไป 1 วันขึ้นไป
+            if (gameState.streakCount > 0) {
+                showImportantNotification(`❌ Streak หาย! คุณขาดไป ${getDaysDifference(lastLogin, today)} วัน`, 'warning', '💔');
+            }
+            gameState.streakCount = 1; // รีเซ็ต streak
+        }
+
+        giveDailyReward(today, false);
+    } else {
+        // ล็อกอินวันเดิม
+        // console.log('✅ วันนี้รับรางวัลไปแล้ว');
+    }
+}
+
+// ฟังก์ชันคำนวณจำนวนวันที่ขาด
+function getDaysDifference(date1, date2) {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    const diffTime = Math.abs(d2 - d1);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) - 1;
+}
+
+// ฟังก์ชันแจกรางวัล
+function giveDailyReward(today, isFirstTime) {
+    const reward = calculateDailyReward();
+
+    // ให้รางวัล
+    gameState.coins += reward.coins;
+    gameState.lastLoginDate = today;
+    gameState.totalLogins++;
+    gameState.claimedRewards.push({
+        date: today,
+        coins: reward.coins,
+        streak: gameState.streakCount
+    });
+
+    // แสดงการแจ้งเตือน
+    showDailyRewardNotification(reward, isFirstTime);
+
+    // บันทึกข้อมูล
+    autoSave();
+
+    console.log(`🎁 Daily Reward: ${reward.coins} coins (Streak: ${gameState.streakCount})`);
+}
+
+// ฟังก์ชันคำนวณรางวัล
+function calculateDailyReward() {
+    let coins = config.dailyRewards.baseCoins;
+
+    // โบนัสจาก streak
+    coins += (gameState.streakCount * config.dailyRewards.streakBonus);
+
+    // โบนัสพิเศษจาก streak สูง
+    if (gameState.streakCount >= config.dailyRewards.maxStreak) {
+        coins *= config.dailyRewards.streakMultiplier;
+    }
+
+    // โบนัสพิเศษจากวันสำคัญ
+    if (config.dailyRewards.specialDays[gameState.streakCount]) {
+        coins += config.dailyRewards.specialDays[gameState.streakCount];
+    }
+
+    // โบนัสจาก total logins
+    if (gameState.totalLogins % 30 === 0 && gameState.totalLogins > 0) {
+        coins += 200; // โบนัส 30 วัน
+    }
+
+    return {
+        coins: Math.round(coins),
+        streak: gameState.streakCount,
+        isSpecial: gameState.streakCount in config.dailyRewards.specialDays
+    };
+}
+
+// ฟังก์ชันแสดงการแจ้งเตือนรางวัล
+function showDailyRewardNotification(reward, isFirstTime) {
+    let message = '';
+    let icon = '🎁';
+
+    if (isFirstTime) {
+        message = `ยินดีต้อนรับ! 🎉 รับ ${reward.coins} เหรียญฟรี!`;
+    } else {
+        message = `รางวัลประจำวัน! 📅 รับ ${reward.coins} เหรียญ`;
+
+        if (reward.streak > 1) {
+            message += ` (Streak: ${reward.streak} วัน)`;
+            icon = '🔥';
+        }
+
+        if (reward.isSpecial) {
+            message += ' 🎊 โบนัสพิเศษ!';
+            icon = '🌟';
+        }
+    }
+
+    // สร้าง notification พิเศษสำหรับ daily reward
+    const notification = document.createElement('div');
+    notification.classList.add('notification', 'success', 'daily-reward');
+    notification.innerHTML = `
+        <div class="notification-icon">${icon}</div>
+        <div class="notification-text">
+            <div class="reward-title">${isFirstTime ? 'ยินดีต้อนรับ!' : 'รางวัลประจำวัน!'}</div>
+            <div class="reward-amount">+${reward.coins} 🪙</div>
+            ${reward.streak > 1 ? `<div class="reward-streak">🔥 ${reward.streak} วันต่อเนื่อง!</div>` : ''}
+        </div>
+    `;
+
+    if (selectors.notificationContainer) {
+        selectors.notificationContainer.appendChild(notification);
+
+        // Animation
+        setTimeout(() => notification.classList.add('show'), 100);
+        setTimeout(() => {
+            notification.classList.remove('show');
+            notification.classList.add('hide');
+            setTimeout(() => notification.remove(), 500);
+        }, 5000);
+    }
+
+    // แสดง particle effect
+    createCoinParticles();
+}
+
+// ฟังก์ชันสร้าง particle effect สำหรับเหรียญ
+function createCoinParticles() {
+    const animations = ['coinFall1', 'coinFall2', 'coinFall3', 'coinFall4', 'coinFall5'];
+
+    for (let i = 0; i < 12; i++) {
+        setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.classList.add('particle', 'coin-particle');
+            particle.innerHTML = '🪙';
+
+            // สุ่มเลือก animation
+            const randomAnim = animations[Math.floor(Math.random() * animations.length)];
+
+            particle.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                font-size: 20px;
+                pointer-events: none;
+                z-index: 10000;
+                opacity: 0;
+                transform: translate(-50%, -50%);
+                animation: ${randomAnim} ${Math.random() * 1 + 1}s ease-in forwards;
+            `;
+
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 2000);
+        }, i * 100);
+    }
+}
+
+// ฟังก์ชันอัพเดตข้อมูล Daily Rewards ใน Settings
+function updateDailyRewardsInfo() {
+    const container = document.getElementById('dailyRewardsInfo');
+    if (!container) return;
+
+    const nextReward = calculateDailyReward();
+    const nextRewardAmount = nextReward.coins;
+
+    container.innerHTML = `
+        <div class="streak-container">
+            <div class="streak-label">🔥 STREAK ปัจจุบัน</div>
+            <div class="streak-count">${gameState.streakCount} วัน</div>
+            <div class="streak-bonus">รางวัลพรุ่งนี้: ${nextRewardAmount} เหรียญ</div>
+            <div class="streak-bonus">ล็อกอินทั้งหมด: ${gameState.totalLogins} ครั้ง</div>
+        </div>
+        
+        ${gameState.claimedRewards.length > 0 ? `
+        <div class="rewards-history">
+            <h4>📊 ประวัติล่าสุด</h4>
+            ${gameState.claimedRewards.slice(-5).reverse().map(reward => `
+                <div class="reward-item">
+                    <span class="reward-date">${formatDate(reward.date)}</span>
+                    <span class="reward-amount">+${reward.coins} 🪙</span>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+    `;
+}
+
+// ฟังก์ชันจัดรูปแบบวันที่
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short'
+    });
+}
+
+// อัพเดตฟังก์ชัน openSettings
+function openSettings() {
+    if (selectors.settingsModal) {
+        selectors.settingsModal.classList.add('active');
+        updateDailyRewardsInfo(); // อัพเดตข้อมูล daily rewards
+    }
+    playSound('button');
+}
 
 // =============================================
 // 💾 AUTO SAVE SYSTEM
@@ -283,7 +764,7 @@ function saveGame() {
             coins: gameState.coins,
             level: gameState.level,
             bestCombo: gameState.bestCombo,
-            
+
             // สถิติ
             totalGames: gameState.totalGames,
             perfectClears: gameState.perfectClears,
@@ -291,27 +772,33 @@ function saveGame() {
             wrongMatches: gameState.wrongMatches,
             totalTimeFreeze: gameState.totalTimeFreeze,
             fastestClear: gameState.fastestClear,
-            
+
             // ความสำเร็จ
             achievements: [...gameState.achievements],
             modesCompleted: { ...gameState.modesCompleted },
-            
+
             // การตั้งค่า
             theme: gameState.theme,
             mode: gameState.mode,
             soundEnabled: gameState.soundEnabled,
             mathMode: gameState.mathMode,
-            
+
+            // Daily Rewards data
+            lastLoginDate: gameState.lastLoginDate,
+            streakCount: gameState.streakCount,
+            totalLogins: gameState.totalLogins,
+            claimedRewards: [...gameState.claimedRewards],
+
             // เวลาบันทึก
             lastSave: Date.now(),
-            version: '1.0'
+            version: '1.1'
         };
-        
+
         localStorage.setItem('mathMatchUltimateSave', JSON.stringify(saveData));
-        console.log('💾 บันทึกเกมเรียบร้อยแล้ว');
+        // console.log('💾 บันทึกเกมเรียบร้อยแล้ว');
         return true;
     } catch (e) {
-        console.error('❌ ไม่สามารถบันทึกเกมได้:', e);
+        // console.error('❌ ไม่สามารถบันทึกเกมได้:', e);
         return false;
     }
 }
@@ -322,9 +809,9 @@ function loadGame() {
         const saved = localStorage.getItem('mathMatchUltimateSave');
         if (saved) {
             const saveData = JSON.parse(saved);
-            
+
             // ตรวจสอบเวอร์ชันและโหลดข้อมูล
-            if (saveData.version === '1.0') {
+            if (saveData.version === '1.0' || saveData.version === '1.1') {
                 // โหลดข้อมูลกลับเข้า gameState
                 gameState.coins = saveData.coins || 100;
                 gameState.level = saveData.level || 1;
@@ -337,21 +824,27 @@ function loadGame() {
                 gameState.fastestClear = saveData.fastestClear || 999;
                 gameState.achievements = saveData.achievements || [];
                 gameState.modesCompleted = saveData.modesCompleted || {
-                    basic: 0, advanced: 0, factorial: 0, 
+                    basic: 0, advanced: 0, factorial: 0,
                     constants: 0, fractions: 0, mixed: 0
                 };
                 gameState.theme = saveData.theme || 'default';
                 gameState.mode = saveData.mode || 'normal';
                 gameState.soundEnabled = saveData.soundEnabled !== undefined ? saveData.soundEnabled : true;
                 gameState.mathMode = saveData.mathMode || null;
-                
-                console.log('📂 โหลดเกมเรียบร้อยแล้ว');
-                showNotification('📂 โหลดข้อมูลเกมเรียบร้อยแล้ว!', 'success');
+
+                // Daily Rewards data
+                gameState.lastLoginDate = saveData.lastLoginDate || null;
+                gameState.streakCount = saveData.streakCount || 0;
+                gameState.totalLogins = saveData.totalLogins || 0;
+                gameState.claimedRewards = saveData.claimedRewards || [];
+
+                // console.log('📂 โหลดเกมเรียบร้อยแล้ว');
+                // showImportantNotification('📂 โหลดข้อมูลเกมเรียบร้อยแล้ว!', 'success', '📂');
                 return true;
             }
         }
     } catch (e) {
-        console.error('❌ ไม่สามารถโหลดเกมได้:', e);
+        // console.error('❌ ไม่สามารถโหลดเกมได้:', e);
     }
     return false;
 }
@@ -372,7 +865,7 @@ function autoSave() {
 function resetGameData() {
     if (confirm('⚠️ ต้องการล้างข้อมูลเกมทั้งหมดใช่ไหม? การกระทำนี้ไม่สามารถย้อนกลับได้!')) {
         localStorage.removeItem('mathMatchUltimateSave');
-        
+
         // รีเซ็ต gameState
         gameState.coins = 100;
         gameState.level = 1;
@@ -385,91 +878,36 @@ function resetGameData() {
         gameState.fastestClear = 999;
         gameState.achievements = [];
         gameState.modesCompleted = {
-            basic: 0, advanced: 0, factorial: 0, 
+            basic: 0, advanced: 0, factorial: 0,
             constants: 0, fractions: 0, mixed: 0
         };
         gameState.theme = 'default';
         gameState.mode = 'normal';
         gameState.soundEnabled = true;
         gameState.mathMode = null;
-        
+
+        // รีเซ็ต Daily Rewards
+        gameState.lastLoginDate = null;
+        gameState.streakCount = 0;
+        gameState.totalLogins = 0;
+        gameState.claimedRewards = [];
+
         updateDisplay();
         updateAchievements();
         changeTheme('default');
-        
-        showNotification('🗑️ ล้างข้อมูลเกมเรียบร้อยแล้ว!', 'info');
+
+        showImportantNotification('🗑️ ล้างข้อมูลเกมเรียบร้อยแล้ว!', 'info', '🗑️');
         console.log('🗑️ รีเซ็ตข้อมูลเกมเรียบร้อยแล้ว');
     }
 }
 
-// ส่งออกข้อมูล
-function exportSaveData() {
-    try {
-        const saveData = localStorage.getItem('mathMatchUltimateSave');
-        if (saveData) {
-            const blob = new Blob([saveData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'math-match-ultimate-save.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showNotification('📤 ส่งออกข้อมูลเรียบร้อยแล้ว!', 'success');
-        } else {
-            showNotification('❌ ไม่มีข้อมูลที่จะส่งออก', 'error');
-        }
-    } catch (e) {
-        console.error('❌ ไม่สามารถส่งออกข้อมูลได้:', e);
-        showNotification('❌ ไม่สามารถส่งออกข้อมูลได้', 'error');
-    }
-}
-
-// นำเข้าข้อมูล
-function importSaveData() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-                    
-                    // ตรวจสอบว่าเป็นข้อมูลที่ถูกต้อง
-                    if (importedData.version === '1.0') {
-                        localStorage.setItem('mathMatchUltimateSave', JSON.stringify(importedData));
-                        loadGame();
-                        showNotification('📥 นำเข้าข้อมูลเรียบร้อยแล้ว!', 'success');
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        showNotification('❌ ไฟล์ไม่ถูกต้องหรือไม่รองรับ', 'error');
-                    }
-                } catch (error) {
-                    console.error('❌ ไฟล์ไม่ถูกต้อง:', error);
-                    showNotification('❌ ไฟล์ไม่ถูกต้อง', 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-    };
-    input.click();
-}
-
 // =============================================
-// 🎮 GAME FUNCTIONS (อัปเดตให้มี Auto Save)
+// 🎮 GAME FUNCTIONS - 9999 LEVELS
 // =============================================
 
 // ฟังก์ชันสำหรับเลือกโหมดคณิตศาสตร์
 function selectMathMode(modeKey) {
     const modeCards = document.querySelectorAll('.math-mode-card');
-    const selectedModeInfo = document.getElementById('selectedModeText');
-    const startButton = document.getElementById('startGameWithMode');
 
     // ลบคลาส selected ออกจากการ์ดทั้งหมด
     modeCards.forEach(card => {
@@ -477,26 +915,28 @@ function selectMathMode(modeKey) {
     });
 
     // เพิ่มคลาส selected ให้กับการ์ดที่เลือก
-    const selectedCard = document.querySelector(`.math-mode-card[data-mode="${modeKey}"]`);
-    if (selectedCard) {
-        selectedCard.classList.add('selected');
+    const selectedCards = document.querySelectorAll(`.math-mode-card[data-mode="${modeKey}"]`);
+    selectedCards.forEach(card => card.classList.add('selected'));
 
-        // อัปเดตข้อมูลโหมดที่เลือก
-        const mode = mathModesDB[modeKey];
-        selectedModeInfo.textContent = `${mode.icon} ${mode.name} - ${getDifficultyText(mode.difficulty)}`;
+    // อัปเดตข้อมูลโหมดที่เลือก
+    const mode = mathModesDB[modeKey];
+    const modeText = `${mode.icon} ${mode.name} - ${getDifficultyText(mode.difficulty)}`;
 
-        // เปิดใช้งานปุ่มเริ่มเกม
-        startButton.disabled = false;
+    // อัปเดตทั้ง desktop และ mobile
+    const selectedModeTextDesktop = document.getElementById('selectedModeText-desktop');
+    const selectedModeTextMobile = document.getElementById('selectedModeText-mobile');
+    const startButtonDesktop = document.getElementById('startGameWithMode-desktop');
+    const startButtonMobile = document.getElementById('startGameWithMode-mobile');
 
-        // บันทึกโหมดที่เลือก
-        gameState.mathMode = modeKey;
-        
-        // บันทึกเกมอัตโนมัติ
-        autoSave();
-        
-        // เล่นเสียงเมื่อเลือกโหมด
-        playSound('select');
-    }
+    if (selectedModeTextDesktop) selectedModeTextDesktop.textContent = modeText;
+    if (selectedModeTextMobile) selectedModeTextMobile.textContent = modeText;
+    if (startButtonDesktop) startButtonDesktop.disabled = false;
+    if (startButtonMobile) startButtonMobile.disabled = false;
+
+    // บันทึกโหมดที่เลือก
+    gameState.mathMode = modeKey;
+    autoSave();
+    playSound('select');
 }
 
 // ฟังก์ชันแปลงระดับความยากเป็นข้อความภาษาไทย
@@ -513,29 +953,49 @@ function getDifficultyText(difficulty) {
 // ฟังก์ชันเริ่มเกมด้วยโหมดที่เลือก
 function startGameWithSelectedMode() {
     if (!gameState.mathMode) {
-        showNotification('กรุณาเลือกโหมดคณิตศาสตร์ก่อนเริ่มเกม!', 'warning');
+        showImportantNotification('กรุณาเลือกโหมดคณิตศาสตร์ก่อนเริ่มเกม!', 'warning', '🎯');
         playSound('wrong');
         return;
     }
 
-    // ซ่อนส่วนเลือกโหมด
-    const modeSelection = document.getElementById('mathModeSelection');
-    if (modeSelection) {
-        modeSelection.classList.remove('active');
-    }
+    // ซ่อนส่วนเลือกโหมด (ทั้ง desktop และ mobile)
+    const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+    const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+    if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
+    if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
 
     // บันทึกเกมอัตโนมัติ
     autoSave();
-    
-    // เล่นเสียงเริ่มเกม
     playSound('start');
-    
+
+    // แจ้งเตือนเริ่มเกม
+    const mode = mathModesDB[gameState.mathMode];
+    showImportantNotification(`เริ่มเกมโหมด: ${mode.name}`, 'success', mode.icon);
+
     // เริ่มเกม
     startGame();
 }
 
-// Start Game
+// Start Game - แก้ไขให้รองรับด่านสูงๆ
 function startGame() {
+    if (!gameState.mathMode) {
+        // ถ้ายังไม่ได้เลือกโหมด ให้แสดงหน้าเลือกโหมด
+        const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+        const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+        if (modeSelectionDesktop) modeSelectionDesktop.classList.add('active');
+        if (modeSelectionMobile) modeSelectionMobile.classList.add('active');
+        return;
+    }
+
+    // ถ้าเลือกโหมดแล้ว ให้ซ่อนหน้าเลือกโหมด
+    const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+    const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+    if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
+    if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
+
     if (gameState.isGameActive) return;
     if (!selectors.gameBoardDesktop || !selectors.gameBoardMobile) {
         console.error('Game board elements not found');
@@ -543,8 +1003,6 @@ function startGame() {
     }
 
     gameState.isGameActive = true;
-    gameState.timeLeft = config.difficulties.easy.time;
-    gameState.score = 0;
     matchedPairs = 0;
     flippedCards = [];
     gameState.combo = 0;
@@ -553,9 +1011,31 @@ function startGame() {
     // ใช้โหมดคณิตศาสตร์ที่เลือก
     const currentMode = mathModesDB[gameState.mathMode];
     const currentQuestions = currentMode.questions.slice();
-    const cardsPerLevel = Math.min(8 + Math.floor(gameState.level / 2) * 2, 16);
+
+    // คำนวณจำนวนคู่ตามด่าน (เพิ่มความยากแบบไม่รู้จบ)
+    const basePairs = 4; // เริ่มที่ 4 คู่
+    const maxPairs = config.scaling.maxPairs;
+    const levelCap = config.scaling.levelCap;
+
+    // คำนวณจำนวนคู่: เพิ่มขึ้นตามด่าน แต่ไม่เกินค่าสูงสุด
+    let pairsMultiplier = Math.min(gameState.level / 10, levelCap / 10);
+    let calculatedPairs = Math.min(
+        basePairs + Math.floor(pairsMultiplier * 6),
+        maxPairs
+    );
+
+    // ทำให้จำนวนคู่เป็นเลขคู่เสมอ
+    const cardsPerLevel = calculatedPairs % 2 === 0 ? calculatedPairs : calculatedPairs - 1;
     const requiredPairs = cardsPerLevel / 2;
     totalPairs = requiredPairs;
+
+    // คำนวณเวลาเริ่มต้นตามความยาก
+    const baseTime = 60;
+    const minTime = config.scaling.minTime;
+    const timeReduction = Math.min(gameState.level * 0.5, 30); // ลดได้สูงสุด 30 วินาที
+    gameState.timeLeft = Math.max(baseTime - timeReduction, minTime);
+
+    console.log(`🎮 ด่าน ${gameState.level}: ${requiredPairs} คู่, เวลา ${gameState.timeLeft} วินาที`);
 
     // Generate card pairs
     let selectedPairs = [];
@@ -634,14 +1114,7 @@ function updateControlButtons() {
     };
 
     ['desktop', 'mobile'].forEach(layout => {
-        const startBtn = document.getElementById(`startBtn-${layout}`);
         const pauseBtn = document.getElementById(`pauseBtn-${layout}`);
-
-        if (startBtn) {
-            startBtn.style.display = gameState.isGameActive ? 'none' : 'inline-block';
-        } else {
-            console.warn(`startBtn-${layout} not found`);
-        }
 
         if (pauseBtn) {
             pauseBtn.style.display = gameState.isGameActive ? 'inline-block' : 'none';
@@ -688,6 +1161,9 @@ function updateDisplay() {
     document.querySelectorAll('.mode-card').forEach(card => {
         card.classList.toggle('active', card.dataset.mode === gameState.mode);
     });
+
+    // อัพเดทสถานะปุ่มไอเทม
+    updatePowerupStates();
 }
 
 // Flip Card
@@ -742,7 +1218,7 @@ function checkMatch() {
         if (matchedPairs === totalPairs) {
             setTimeout(levelComplete, 500);
         }
-        
+
         // บันทึกเกมอัตโนมัติเมื่อจับคู่ได้
         autoSave();
     } else {
@@ -789,12 +1265,12 @@ function startTimer() {
             gameState.timeLeft--;
             updateDisplay();
             lastTime = currentTime;
-            
+
             // บันทึกอัตโนมัติทุก 30 วินาที
             if (gameState.timeLeft % 30 === 0) {
                 autoSave();
             }
-            
+
             if (gameState.timeLeft <= 0) {
                 gameOver();
                 return;
@@ -805,7 +1281,7 @@ function startTimer() {
     timer = requestAnimationFrame(tick);
 }
 
-// Level Complete
+// Level Complete - แก้ไขให้รองรับด่านสูงๆ
 function levelComplete() {
     cancelAnimationFrame(timer);
     gameState.isGameActive = false;
@@ -822,35 +1298,87 @@ function levelComplete() {
         gameState.modesCompleted[gameState.mathMode]++;
     }
 
-    let stars = 1;
-    if (gameState.timeLeft > config.scoring.starThresholds[0]) stars = 2;
-    if (gameState.timeLeft > config.scoring.starThresholds[1]) stars = 3;
-    if (matchedPairs === totalPairs && gameState.timeLeft > 30) {
-        gameState.perfectClears++;
-        stars = 3;
-    }
+    // คำนวณดาวและรางวัลตามความยากของด่าน
+    const levelBonus = Math.min(gameState.level * 2, 100); // โบนัสตามด่าน สูงสุด 100
+    let stars = calculateStars();
+    let coinsEarned = calculateCoinsEarned(stars, levelBonus);
 
-    const timeBonus = gameState.timeLeft * config.scoring.timeBonusMultiplier;
-    const coinsEarned = 50 + (stars * 20);
-    gameState.score += timeBonus;
+    gameState.score += (gameState.timeLeft * config.scoring.timeBonusMultiplier) + levelBonus;
     gameState.coins += coinsEarned;
+
+    // ปลดล็อค achievement พิเศษสำหรับด่านสำคัญ
+    unlockMilestoneAchievements();
 
     // บันทึกเกมเมื่อจบด่าน
     saveGame();
-    
+
     showVictory(stars, coinsEarned);
     playSound('victory');
     updateAchievements();
+}
+
+// ฟังก์ชันคำนวณดาวตามประสิทธิภาพ
+function calculateStars() {
+    const timePercentage = (gameState.timeLeft / 60) * 100;
+    let stars = 1;
+
+    if (timePercentage > 50) stars = 2;
+    if (timePercentage > 75) stars = 3;
+    if (matchedPairs === totalPairs && gameState.timeLeft > 45) {
+        stars = 3;
+        gameState.perfectClears++;
+    }
+
+    // โบนัสดาวสำหรับด่านสูงๆ
+    if (gameState.level >= 100 && stars === 3) {
+        stars = 4; // ⭐ เพิ่มพิเศษ!
+    }
+    if (gameState.level >= 500 && stars === 3) {
+        stars = 5; // ⭐⭐ เพิ่มพิเศษมาก!
+    }
+
+    return stars;
+}
+
+// ฟังก์ชันคำนวณเหรียญที่ได้
+function calculateCoinsEarned(stars, levelBonus) {
+    let baseCoins = 50 + (stars * 20);
+
+    // โบนัสเหรียญสำหรับด่านสูงๆ
+    if (gameState.level >= 100) baseCoins += 50;
+    if (gameState.level >= 500) baseCoins += 100;
+    if (gameState.level >= 1000) baseCoins += 200;
+
+    return baseCoins + Math.floor(levelBonus / 2);
+}
+
+// ฟังก์ชันปลดล็อค achievement ด่านสำคัญ
+function unlockMilestoneAchievements() {
+    const milestones = [
+        { level: 50, achievement: 'level_50' },
+        { level: 100, achievement: 'level_100' },
+        { level: 500, achievement: 'level_500' },
+        { level: 1000, achievement: 'level_1000' },
+        { level: 5000, achievement: 'level_5000' },
+        { level: 9999, achievement: 'max_level' }
+    ];
+
+    milestones.forEach(milestone => {
+        if (gameState.level === milestone.level && !gameState.achievements.includes(milestone.achievement)) {
+            gameState.achievements.push(milestone.achievement);
+            showImportantNotification(`🏆 ปลดล็อค: ด่าน ${milestone.level}!`, 'achievement', '🎯');
+        }
+    });
 }
 
 // Game Over
 function gameOver() {
     cancelAnimationFrame(timer);
     gameState.isGameActive = false;
-    
+
     // บันทึกเกมเมื่อเกมโอเวอร์
     saveGame();
-    
+
     playSound('gameover');
 
     if (selectors.gameOverScore) selectors.gameOverScore.textContent = gameState.score;
@@ -873,31 +1401,78 @@ function restartGame() {
     setTimeout(() => startGame(), 500);
 }
 
-// Show Victory
+// Show Victory - แก้ไขให้แสดงข้อมูลด่านสูงๆ
 function showVictory(stars, coins) {
     if (!selectors.victoryModal || !selectors.starsDisplay) return;
 
     const starsElements = selectors.starsDisplay.children;
     for (let i = 0; i < starsElements.length; i++) {
         starsElements[i].classList.remove('active');
+        starsElements[i].textContent = '⭐'; // รีเซ็ตเป็นดาวปกติ
     }
 
-    for (let i = 0; i < stars; i++) {
+    // แสดงดาวตามที่ได้ (รองรับมากกว่า 3 ดาว)
+    for (let i = 0; i < Math.min(stars, 5); i++) {
         setTimeout(() => {
-            starsElements[i].classList.add('active');
+            if (i >= 3) {
+                // ดาวพิเศษสำหรับด่านสูงๆ
+                starsElements[i % 3].textContent = '🌟';
+                starsElements[i % 3].style.animation = 'starShine 0.6s infinite alternate';
+            }
+            starsElements[i % 3].classList.add('active');
         }, i * 300);
     }
 
-    if (selectors.finalScore) selectors.finalScore.textContent = gameState.score;
-    if (selectors.coinsEarned) selectors.coinsEarned.textContent = coins;
+    if (selectors.finalScore) selectors.finalScore.textContent = gameState.score.toLocaleString();
+    if (selectors.coinsEarned) selectors.coinsEarned.textContent = coins.toLocaleString();
     if (selectors.bestComboDisplay) selectors.bestComboDisplay.textContent = gameState.bestCombo;
     if (selectors.progressFill) {
-        const progress = Math.min(100, (gameState.level / 50) * 100);
-        selectors.progressFill.style.width = progress + '%';
-        selectors.progressFill.textContent = `ด่าน ${gameState.level}/50`;
+        const progress = Math.min(100, (gameState.level / config.maxLevel) * 100);
+
+        // ใช้ความกว้างขั้นต่ำ 5% เพื่อให้เห็นข้อความ
+        const displayWidth = Math.max(progress, 5);
+        selectors.progressFill.style.width = displayWidth + '%';
+
+        // ตั้งค่าข้อความและ data attribute
+        const progressText = `ด่าน ${gameState.level}/${config.maxLevel}`;
+        selectors.progressFill.textContent = progressText;
+        selectors.progressFill.setAttribute('data-text', progressText);
+
+        // เปลี่ยนสีตามด่าน
+        selectors.progressFill.className = 'progress-fill'; // รีเซ็ตคลาส
+        if (gameState.level >= 1000) {
+            selectors.progressFill.classList.add('mythic');
+        } else if (gameState.level >= 500) {
+            selectors.progressFill.classList.add('legendary');
+        } else if (gameState.level >= 100) {
+            selectors.progressFill.classList.add('epic');
+        }
+
+        // console.log(`📊 Progress: ${progress}% (Level ${gameState.level}/${config.maxLevel})`);
     }
 
+    // แสดงข้อความพิเศษสำหรับด่านสำคัญ
+    showSpecialLevelMessage();
+
     selectors.victoryModal.classList.add('active');
+}
+
+// ฟังก์ชันแสดงข้อความพิเศษสำหรับด่านสำคัญ
+function showSpecialLevelMessage() {
+    const specialMessages = {
+        50: "🎉 ครบ 50 ด่านแล้ว! คุณกำลังมาแรง!",
+        100: "🔥 100 ด่าน! คุณคือมืออาชีพแล้ว!",
+        500: "⚡ 500 ด่าน! คุณคือเทพคณิตศาสตร์!",
+        1000: "👑 1000 ด่าน! คุณคือตำนาน!",
+        5000: "🌌 5000 ด่าน! คุณเกินระดับเทพแล้ว!",
+        9999: "⚡ MAX LEVEL! คุณคือสุดยอดแห่งสุดยอด!"
+    };
+
+    if (specialMessages[gameState.level]) {
+        setTimeout(() => {
+            showImportantNotification(specialMessages[gameState.level], 'achievement', '🎯');
+        }, 1000);
+    }
 }
 
 // Close Victory
@@ -910,12 +1485,25 @@ function closeVictory() {
 // Next Level
 function nextLevel() {
     gameState.level++;
-    
+
     // บันทึกเกมเมื่อเลื่อนด่าน
     autoSave();
-    
+
     closeVictory();
-    setTimeout(() => startGame(), 500);
+    setTimeout(() => {
+        // ตั้งค่าให้เกมพร้อมเริ่มโดยไม่แสดงหน้าเลือกโหมด
+        gameState.isGameActive = false; // รีเซ็ตสถานะก่อนเริ่มเกมใหม่
+
+        // ซ่อนหน้าเลือกโหมดถ้ามันแสดงอยู่
+        const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+        const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+        if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
+        if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
+
+        // เริ่มเกมด้วยโหมดเดิม
+        startGame();
+    }, 500);
 }
 
 // Reset Game (เฉพาะเซสชันปัจจุบัน)
@@ -938,10 +1526,11 @@ function resetGame() {
     });
 
     // แสดงหน้าเลือกโหมดใหม่
-    const modeSelection = document.getElementById('mathModeSelection');
-    if (modeSelection) {
-        modeSelection.classList.add('active');
-    }
+    const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+    const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+    if (modeSelectionDesktop) modeSelectionDesktop.classList.add('active');
+    if (modeSelectionMobile) modeSelectionMobile.classList.add('active');
 
     updateControlButtons();
     updateDisplay();
@@ -950,47 +1539,58 @@ function resetGame() {
 // Use Powerup
 function usePowerup(type) {
     if (!gameState.isGameActive) {
-        showNotification('เริ่มเกมก่อนใช้ไอเทม!', 'warning');
+        showImportantNotification('เริ่มเกมก่อนใช้ไอเทม!', 'warning', '⚠️');
         return;
     }
 
     const cost = config.powerupCosts[type];
     if (gameState.coins < cost) {
-        showNotification('💰 เหรียญไม่พอ!', 'warning');
+        showImportantNotification('💰 เหรียญไม่พอ!', 'warning', '💰');
         return;
     }
 
     gameState.coins -= cost;
     gameState.powerupsUsed++;
     playSound('powerup');
-    
+
     // บันทึกเกมเมื่อใช้ไอเทม
     autoSave();
+
+    const powerupIcons = {
+        'time': '⏰',
+        'hint': '💡',
+        'remove': '🎯',
+        'freeze': '❄️'
+    };
+
+    const powerupMessages = {
+        'time': '+15 วินาที!',
+        'hint': 'เปิดดู 2 ใบ!',
+        'remove': 'ลบคู่สำเร็จ!',
+        'freeze': 'เวลาหยุด 5 วิ!'
+    };
+
+    showImportantNotification(powerupMessages[type], 'success', powerupIcons[type]);
 
     switch (type) {
         case 'time':
             gameState.timeLeft += 15;
-            showNotification('⏰ +15 วินาที!', 'success');
+            updateDisplay();
             break;
         case 'hint':
             revealHint();
-            showNotification('💡 เปิดดู 2 ใบ!', 'info');
             break;
         case 'remove':
             removeOnePair();
-            showNotification('🎯 ลบคู่สำเร็จ!', 'success');
             break;
         case 'freeze':
             freezeTimer();
             gameState.totalTimeFreeze += 5;
-            showNotification('❄️ เวลาหยุด 5 วิ!', 'info');
             break;
     }
-
-    updateDisplay();
 }
 
-// Reveal Hint
+// Reveal Hint - แก้ไขให้สมบูรณ์
 function revealHint() {
     const unmatched = Array.from(document.querySelectorAll('.card:not(.matched)'));
     if (unmatched.length < 2) return;
@@ -1008,19 +1608,27 @@ function revealHint() {
     const pair = pairs[Math.floor(Math.random() * pairs.length)];
     const [card1, card2] = pair.slice(0, 2);
 
+    // เปิดการ์ดชั่วคราว
     [card1, card2].forEach(card => {
-        card.classList.add('flipped');
+        card.classList.add('flipped', 'hint');
         card.textContent = card.dataset.value;
+
+        // เพิ่มเอฟเฟกต์พิเศษสำหรับคำใบ้
+        card.style.boxShadow = '0 0 20px gold';
+        card.style.transform = 'scale(1.1)';
+
         setTimeout(() => {
             if (!card.classList.contains('matched')) {
-                card.classList.remove('flipped');
+                card.classList.remove('flipped', 'hint');
                 card.textContent = '?';
+                card.style.boxShadow = '';
+                card.style.transform = '';
             }
         }, 2000);
     });
 }
 
-// Remove One Pair
+// Remove One Pair - แก้ไขให้สมบูรณ์
 function removeOnePair() {
     const unmatched = Array.from(document.querySelectorAll('.card:not(.matched)'));
     const values = {};
@@ -1035,25 +1643,60 @@ function removeOnePair() {
 
     const pair = pairs[Math.floor(Math.random() * pairs.length)];
     pair.slice(0, 2).forEach(c => {
-        c.classList.add('matched');
+        c.classList.add('matched', 'flipped');
         c.textContent = c.dataset.value;
-        matchedPairs++;
+        // เพิ่มเอฟเฟกต์พิเศษ
+        c.style.animation = 'match 0.5s';
+        createParticles(c);
     });
 
+    matchedPairs++;
     gameState.score += 20;
+
     if (matchedPairs === totalPairs) {
         setTimeout(levelComplete, 500);
     }
     updateDisplay();
 }
 
-// Freeze Timer
+// Freeze Timer - แก้ไขให้สมบูรณ์
 function freezeTimer() {
+    if (freezeTime) return; // ถ้ายังแข็งอยู่就不要ใช้ซ้ำ
+
     freezeTime = true;
+
+    // เพิ่มเอฟเฟกต์ภาพเมื่อเวลาแข็ง
+    document.body.classList.add('freeze-effect');
+
+    // แสดงตัวนับถอยหลัง
+    showImportantNotification('❄️ เวลาแข็ง 5 วินาที!', 'info', '❄️');
+
+    let freezeCount = 5;
+    const countdownInterval = setInterval(() => {
+        if (freezeCount > 0) {
+            freezeCount--;
+        }
+    }, 1000);
+
     setTimeout(() => {
         freezeTime = false;
-        showNotification('⏰ เวลาเดินต่อ!', 'info');
+        clearInterval(countdownInterval);
+        document.body.classList.remove('freeze-effect');
     }, 5000);
+}
+
+// Update Powerup States
+function updatePowerupStates() {
+    document.querySelectorAll('.powerup, .powerup-mobile').forEach(powerup => {
+        const type = powerup.dataset.type;
+        const cost = config.powerupCosts[type];
+
+        if (gameState.coins < cost) {
+            powerup.classList.add('disabled');
+        } else {
+            powerup.classList.remove('disabled');
+        }
+    });
 }
 
 // Show Combo
@@ -1100,10 +1743,19 @@ function changeTheme(themeName) {
     document.body.className = `theme-${themeName}`;
     gameState.theme = themeName;
     updateDisplay();
-    
+
     // บันทึกเกมเมื่อเปลี่ยนธีม
     autoSave();
-    
+
+    const themeIcons = {
+        'default': '🎨',
+        'light': '☀️',
+        'dark': '🌙',
+        'cute': '🐰',
+        'nature': '🌿'
+    };
+
+    // showImportantNotification(`เปลี่ยนธีมเป็น: ${themeName}`, 'info', themeIcons[themeName]);
     playSound('select');
 }
 
@@ -1111,11 +1763,11 @@ function changeTheme(themeName) {
 function changeMode(modeName) {
     gameState.mode = modeName;
     updateDisplay();
-    
+
     // บันทึกเกมเมื่อเปลี่ยนโหมด
     autoSave();
-    
-    showNotification(`โหมดเกมเปลี่ยนเป็น: ${modeName}`, 'info');
+
+    // showImportantNotification(`โหมดเกมเปลี่ยนเป็น: ${modeName}`, 'info', '🕹️');
     playSound('select');
 }
 
@@ -1131,9 +1783,13 @@ function toggleSound() {
 
     // บันทึกเกมเมื่อเปลี่ยนการตั้งค่าเสียง
     autoSave();
-    
+
     playSound('toggle');
-    showNotification(gameState.soundEnabled ? '🔊 เปิดเสียง' : '🔇 ปิดเสียง', 'info');
+    showImportantNotification(
+        gameState.soundEnabled ? 'เปิดเสียง' : 'ปิดเสียง',
+        'info',
+        gameState.soundEnabled ? '🔊' : '🔇'
+    );
 }
 
 // Play Sound
@@ -1174,31 +1830,6 @@ function playSound(type) {
 function playHoverSound() {
     if (!gameState.soundEnabled || !audioCtx) return;
     playSound('hover');
-}
-
-// Show Notification
-function showNotification(message, type = 'info') {
-    if (!selectors.notificationContainer) return;
-    notificationQueue.push({ message, type });
-    if (notificationQueue.length === 1) {
-        displayNextNotification();
-    }
-}
-
-function displayNextNotification() {
-    if (!notificationQueue.length) return;
-    const { message, type } = notificationQueue[0];
-    const notification = document.createElement('div');
-    notification.classList.add('notification', type);
-    notification.textContent = message;
-    notification.setAttribute('aria-live', 'assertive');
-    selectors.notificationContainer.appendChild(notification);
-
-    setTimeout(() => {
-        notification.remove();
-        notificationQueue.shift();
-        displayNextNotification();
-    }, 2500);
 }
 
 // Create Particles
@@ -1242,52 +1873,13 @@ function createParticles(element) {
     }
 }
 
-// ฟังก์ชันแสดง achievement ที่ปลดล็อคพร้อมเอฟเฟกต์
-function showAchievementUnlocked(achievement) {
-    const notification = document.createElement('div');
-    notification.classList.add('achievement-unlocked', achievement.rarity);
-    notification.innerHTML = `
-        <div class="achievement-popup">
-            <div class="achievement-icon">${achievement.icon}</div>
-            <div class="achievement-content">
-                <div class="achievement-title">🏅 ปลดล็อคความสำเร็จ!</div>
-                <div class="achievement-name">${achievement.name}</div>
-                <div class="achievement-rarity">${getRarityText(achievement.rarity)}</div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(notification);
-
-    // ลบการแจ้งเตือนหลังจาก 4 วินาที
-    setTimeout(() => {
-        notification.remove();
-    }, 4000);
-
-    // แสดงการแจ้งเตือนปกติด้วย
-    showNotification(`🏅 ปลดล็อค: ${achievement.name} (${getRarityText(achievement.rarity)})`, 'success');
-    playSound('victory');
-}
-
-// ฟังก์ชันแปลงระดับความหายากเป็นข้อความ
-function getRarityText(rarity) {
-    const rarityMap = {
-        'common': '🟢 ธรรมดา',
-        'uncommon': '🔵 ไม่ธรรมดา',
-        'rare': '🟣 หายาก',
-        'epic': '🟠 เอพิค',
-        'mythic': '🔴 เป็นไปไม่ได้'
-    };
-    return rarityMap[rarity] || rarity;
-}
-
 // Update Achievements
 function updateAchievements() {
     achievementsList.forEach(ach => {
         if (ach.condition() && !gameState.achievements.includes(ach.id)) {
             gameState.achievements.push(ach.id);
             showAchievementUnlocked(ach);
-            
+
             // บันทึกเกมเมื่อได้ achievement ใหม่
             autoSave();
         }
@@ -1338,63 +1930,41 @@ function initAudio() {
     }
 }
 
-// เพิ่มในส่วน JavaScript ของคุณ
-function initMobileScroll() {
-    const mathModesGrid = document.querySelector('.math-modes-grid');
-    if (!mathModesGrid) return;
-
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    mathModesGrid.addEventListener('mousedown', (e) => {
-        isDown = true;
-        mathModesGrid.classList.add('scrolling');
-        startX = e.pageX - mathModesGrid.offsetLeft;
-        scrollLeft = mathModesGrid.scrollLeft;
-    });
-
-    mathModesGrid.addEventListener('mouseleave', () => {
-        isDown = false;
-        mathModesGrid.classList.remove('scrolling');
-    });
-
-    mathModesGrid.addEventListener('mouseup', () => {
-        isDown = false;
-        mathModesGrid.classList.remove('scrolling');
-    });
-
-    mathModesGrid.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - mathModesGrid.offsetLeft;
-        const walk = (x - startX) * 2;
-        mathModesGrid.scrollLeft = scrollLeft - walk;
-    });
-
-    // สำหรับ Touch Events
-    mathModesGrid.addEventListener('touchstart', (e) => {
-        isDown = true;
-        mathModesGrid.classList.add('scrolling');
-        startX = e.touches[0].pageX - mathModesGrid.offsetLeft;
-        scrollLeft = mathModesGrid.scrollLeft;
-    });
-
-    mathModesGrid.addEventListener('touchend', () => {
-        isDown = false;
-        mathModesGrid.classList.remove('scrolling');
-    });
-
-    mathModesGrid.addEventListener('touchmove', (e) => {
-        if (!isDown) return;
-        const x = e.touches[0].pageX - mathModesGrid.offsetLeft;
-        const walk = (x - startX) * 2;
-        mathModesGrid.scrollLeft = scrollLeft - walk;
-    });
+// ฟังก์ชันเปิด Modal เครดิต
+function openCreditsModal() {
+    const creditsModal = document.getElementById('creditsModal');
+    if (creditsModal) {
+        creditsModal.classList.add('active');
+        playSound('button');
+    }
 }
 
-// เรียกใช้ฟังก์ชันเมื่อ DOM โหลดเสร็จ
-document.addEventListener('DOMContentLoaded', initMobileScroll);
+// ฟังก์ชันปิด Modal เครดิต
+function closeCreditsModal() {
+    const creditsModal = document.getElementById('creditsModal');
+    if (creditsModal) {
+        creditsModal.classList.remove('active');
+        playSound('button');
+    }
+}
+
+// ฟังก์ชันเปิด Modal นโยบายความเป็นส่วนตัว
+function openPrivacyModal() {
+    const privacyModal = document.getElementById('privacyModal');
+    if (privacyModal) {
+        privacyModal.classList.add('active');
+        playSound('button');
+    }
+}
+
+// ฟังก์ชันปิด Modal นโยบายความเป็นส่วนตัว
+function closePrivacyModal() {
+    const privacyModal = document.getElementById('privacyModal');
+    if (privacyModal) {
+        privacyModal.classList.remove('active');
+        playSound('button');
+    }
+}
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -1403,6 +1973,66 @@ document.addEventListener('DOMContentLoaded', () => {
     changeTheme(gameState.theme);
     updateDisplay();
     updateAchievements();
+
+    // ตรวจสอบ Daily Rewards เมื่อโหลดเกมเสร็จ
+    setTimeout(() => {
+        checkDailyRewards();
+    }, 1000);
+
+    // เพิ่ม Event Listeners สำหรับ footer
+    const showCreditsBtn = document.getElementById('showCreditsBtn');
+    const privacyPolicyBtn = document.getElementById('privacyPolicyBtn');
+
+    if (showCreditsBtn) {
+        showCreditsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openCreditsModal();
+        });
+    }
+
+    if (privacyPolicyBtn) {
+        privacyPolicyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openPrivacyModal();
+        });
+    }
+
+    // ปิด modal เมื่อคลิกพื้นหลัง
+    const creditsModal = document.getElementById('creditsModal');
+    const privacyModal = document.getElementById('privacyModal');
+
+    if (creditsModal) {
+        creditsModal.addEventListener('click', (e) => {
+            if (e.target === creditsModal) {
+                closeCreditsModal();
+            }
+        });
+    }
+
+    if (privacyModal) {
+        privacyModal.addEventListener('click', (e) => {
+            if (e.target === privacyModal) {
+                closePrivacyModal();
+            }
+        });
+    }
+
+    // เพิ่ม Event Listeners สำหรับไอเทมพิเศษ
+    document.querySelectorAll('.powerup, .powerup-mobile').forEach(powerup => {
+        powerup.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const type = powerup.dataset.type;
+
+            if (powerup.classList.contains('disabled')) {
+                showImportantNotification('💰 เหรียญไม่พอ!', 'warning', '💰');
+                playSound('wrong');
+                return;
+            }
+
+            playSound('button');
+            usePowerup(type);
+        });
+    });
 
     // เพิ่ม Event Listeners สำหรับเอฟเฟกต์เสียงโฮเวอร์ (เฉพาะเดสก์ท็อป)
     if (window.matchMedia("(min-width: 1024px)").matches) {
@@ -1413,17 +2043,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Controls
     ['desktop', 'mobile'].forEach(layout => {
-        const startBtn = document.getElementById(`startBtn-${layout}`);
         const pauseBtn = document.getElementById(`pauseBtn-${layout}`);
         const settingsBtn = document.getElementById(`settingsBtn-${layout}`);
         const soundBtn = document.getElementById(`soundBtn-${layout}`);
 
-        if (startBtn) {
-            startBtn.addEventListener('click', () => {
-                playSound('button');
-                startGameWithSelectedMode();
-            });
-        }
         if (pauseBtn) {
             pauseBtn.addEventListener('click', () => {
                 playSound('button');
@@ -1555,9 +2178,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Event Listener สำหรับปุ่มเริ่มเกมด้วยโหมดที่เลือก
-    const startGameWithModeBtn = document.getElementById('startGameWithMode');
-    if (startGameWithModeBtn) {
-        startGameWithModeBtn.addEventListener('click', () => {
+    const startGameWithModeDesktop = document.getElementById('startGameWithMode-desktop');
+    const startGameWithModeMobile = document.getElementById('startGameWithMode-mobile');
+
+    if (startGameWithModeDesktop) {
+        startGameWithModeDesktop.addEventListener('click', () => {
+            playSound('button');
+            startGameWithSelectedMode();
+        });
+    }
+
+    if (startGameWithModeMobile) {
+        startGameWithModeMobile.addEventListener('click', () => {
             playSound('button');
             startGameWithSelectedMode();
         });
@@ -1565,25 +2197,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================
-// 🎮 STEALTH HACK SYSTEM (Hidden Mode)
+// 🎮 CHEAT SYSTEM (โกงเกม) - FULL VERSION
 // =============================================
 
 (function () {
     'use strict';
 
-    const stealthSystem = {
+    const cheatSystem = {
+        // ระบบช่วยเหลือพื้นฐาน
         helper: {
             addResources() {
                 gameState.coins += 5000;
                 updateDisplay();
                 autoSave();
+                showImportantNotification('💰 ได้รับ 5000 เหรียญฟรี!', 'success', '💰');
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มทรัพยากร');
             },
 
             boostProgress() {
-                gameState.level = Math.min(gameState.level + 5, 100);
+                gameState.level = Math.min(gameState.level + 5, 9999);
                 updateDisplay();
                 autoSave();
+                showImportantNotification('🚀 เลื่อนขึ้น 5 ด่าน!', 'success', '🚀');
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มความคืบหน้า');
             },
 
@@ -1591,10 +2226,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameState.timeLeft += 60;
                 updateDisplay();
                 autoSave();
+                showImportantNotification('⏰ เพิ่มเวลา 60 วินาที!', 'success', '⏰');
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มเวลา');
+            },
+
+            maxStats() {
+                gameState.coins = 99999;
+                gameState.level = 9999;
+                gameState.score = 999999;
+                gameState.bestCombo = 999;
+                updateDisplay();
+                autoSave();
+                showImportantNotification('💎 สถิติเต็มหมดแล้ว!', 'success', '💎');
+                console.log('🔧 ระบบช่วยเหลือ: สถิติสูงสุด');
             }
         },
 
+        // ระบบพัฒนา
         development: {
             completeObjectives() {
                 matchedPairs = totalPairs;
@@ -1602,6 +2250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => levelComplete(), 100);
                 }
                 autoSave();
+                showImportantNotification('🎯 บรรลุเป้าหมายทันที!', 'success', '🎯');
                 console.log('🔧 ระบบพัฒนา: บรรลุเป้าหมาย');
             },
 
@@ -1613,6 +2262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 updateAchievements();
                 autoSave();
+                showImportantNotification('🏆 ปลดล็อคทุกความสำเร็จ!', 'success', '🏆');
                 console.log('🔧 ระบบพัฒนา: ปลดล็อคฟีเจอร์');
             },
 
@@ -1621,10 +2271,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameState.perfectClears = 30;
                 gameState.totalGames = 100;
                 autoSave();
+                showImportantNotification('⚡ ปรับปรุงสถิติแล้ว!', 'success', '⚡');
                 console.log('🔧 ระบบพัฒนา: ปรับปรุงประสิทธิภาพ');
             }
         },
 
+        // ระบบทดสอบ
         testing: {
             previewAllCards() {
                 if (gameState.isGameActive) {
@@ -1632,6 +2284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         card.classList.add('flipped');
                         card.textContent = card.dataset.value;
                     });
+                    showImportantNotification('👁️ เปิดการ์ดทั้งหมด!', 'info', '👁️');
                     console.log('🔧 ระบบทดสอบ: แสดงตัวอย่างการ์ด');
                 }
             },
@@ -1662,6 +2315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     updateDisplay();
                     autoSave();
+                    showImportantNotification('🤖 จบเกมอัตโนมัติ!', 'success', '🤖');
                     console.log('🔧 ระบบทดสอบ: เสร็จสิ้นอัตโนมัติ');
                 }
             },
@@ -1672,116 +2326,114 @@ document.addEventListener('DOMContentLoaded', () => {
                         createParticles(document.querySelector('.card') || document.body);
                     }, i * 200);
                 }
+                showImportantNotification('🎭 ทดสอบเอฟเฟกต์!', 'info', '🎭');
                 console.log('🔧 ระบบทดสอบ: ทดสอบเอฟเฟกต์');
+            }
+        },
+
+        // ระบบพิเศษ
+        special: {
+            rainbowTheme() {
+                document.body.style.background = 'linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff00ff)';
+                document.body.style.animation = 'rainbowBackground 5s infinite linear';
+                showImportantNotification('🌈 โหมดสายรุ้ง!', 'info', '🌈');
+                console.log('🔧 ระบบพิเศษ: โหมดสายรุ้ง');
+            },
+
+            godMode() {
+                gameState.coins = 999999;
+                gameState.level = 9999;
+                gameState.score = 9999999;
+                gameState.bestCombo = 999;
+                gameState.perfectClears = 999;
+                updateDisplay();
+                autoSave();
+                showImportantNotification('👑 โหมดเทพเจ้า!', 'success', '👑');
+                console.log('🔧 ระบบพิเศษ: โหมดเทพเจ้า');
+            },
+
+            resetAll() {
+                resetGameData();
+                showImportantNotification('🔄 รีเซ็ตทุกอย่าง!', 'info', '🔄');
+                console.log('🔧 ระบบพิเศษ: รีเซ็ตทั้งหมด');
             }
         }
     };
 
-    // ฟังก์ชันเปิดใช้งานระบบลับ (ใช้รหัสลับ)
-    function activateSecretSystem(code) {
-        const secretCodes = {
+    // ฟังก์ชันเปิดใช้งานระบบโกงด้วยรหัสลับ
+    function activateCheatSystem(code) {
+        const cheatCodes = {
             '1337': () => {
-                stealthSystem.helper.addResources();
-                stealthSystem.development.unlockFeatures();
+                cheatSystem.helper.addResources();
+                cheatSystem.development.unlockFeatures();
                 return '🚀 ระบบความช่วยเหลือขั้นสูงเปิดใช้งาน';
             },
             '9999': () => {
-                gameState.coins = 99999;
-                gameState.level = 99;
-                gameState.score = 99999;
-                updateDisplay();
-                autoSave();
+                cheatSystem.helper.maxStats();
                 return '💎 สถิติสูงสุดเปิดใช้งาน';
             },
             '0420': () => {
-                stealthSystem.testing.testEffects();
-                document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                cheatSystem.testing.testEffects();
+                cheatSystem.special.rainbowTheme();
                 return '🎨 โหมดศิลปะเปิดใช้งาน';
             },
             '7777': () => {
-                stealthSystem.development.optimizePerformance();
-                stealthSystem.helper.extraTime();
+                cheatSystem.development.optimizePerformance();
+                cheatSystem.helper.extraTime();
                 return '🍀 โหมดนำโชคเปิดใช้งาน';
             },
             '1984': () => {
-                stealthSystem.testing.previewAllCards();
-                stealthSystem.testing.autoComplete();
+                cheatSystem.testing.previewAllCards();
+                cheatSystem.testing.autoComplete();
                 return '👁️ โหมดมองเห็นเปิดใช้งาน';
             },
             '0000': () => {
-                resetGameData();
+                cheatSystem.special.resetAll();
                 return '🔄 ระบบรีเซ็ตเปิดใช้งาน';
+            },
+            '1111': () => {
+                cheatSystem.special.godMode();
+                return '👑 โหมดเทพเจ้าเปิดใช้งาน';
+            },
+            '2024': () => {
+                cheatSystem.helper.boostProgress();
+                cheatSystem.helper.addResources();
+                return '🎊 โหมดปีใหม่เปิดใช้งาน';
             }
         };
 
-        if (secretCodes[code]) {
-            const result = secretCodes[code]();
-            console.log('🔐 ระบบลับ: ' + result);
-            showStealthNotification(result);
+        if (cheatCodes[code]) {
+            const result = cheatCodes[code]();
+            console.log('🔐 ระบบโกง: ' + result);
+            showImportantNotification(result, 'info', '💡');
             return true;
         }
         return false;
     }
 
-    // การแจ้งเตือนแบบลับ
-    function showStealthNotification(message) {
-        const notification = document.createElement('div');
-        notification.textContent = '💡 ' + message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 10000;
-            border-left: 3px solid #00ff00;
-            max-width: 200px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        `;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.opacity = '1';
-        }, 100);
-
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-    }
-
     // ระบบตรวจจับคีย์ลับ
-    let secretSequence = '';
-    const secretPattern = '38384040373937396665';
+    let cheatSequence = '';
+    const cheatPattern = '38384040373937396665';
 
-    function handleSecretKey(event) {
-        secretSequence += event.keyCode;
+    function handleCheatKey(event) {
+        cheatSequence += event.keyCode;
 
-        if (secretSequence.length > 20) {
-            secretSequence = secretSequence.slice(-20);
+        if (cheatSequence.length > 20) {
+            cheatSequence = cheatSequence.slice(-20);
         }
 
-        if (secretSequence.includes(secretPattern)) {
-            secretSequence = '';
-            openSecretPanel();
+        if (cheatSequence.includes(cheatPattern)) {
+            cheatSequence = '';
+            openCheatPanel();
         }
 
-        if (event.shiftKey && event.key === '`') {
-            openSecretPanel();
+        if (event.shiftKey && event.ctrlKey && event.key === 'C') {
+            openCheatPanel();
         }
     }
 
-    // แผงควบคุมลับ
-    function openSecretPanel() {
+    // แผงควบคุมโกง
+    function openCheatPanel() {
         const panel = document.createElement('div');
         panel.style.cssText = `
             position: fixed;
@@ -1795,47 +2447,43 @@ document.addEventListener('DOMContentLoaded', () => {
             z-index: 10000;
             color: #00ff00;
             font-family: monospace;
-            min-width: 300px;
+            min-width: 350px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            max-height: 80vh;
+            overflow-y: auto;
         `;
 
         panel.innerHTML = `
             <div style="margin-bottom: 15px; text-align: center;">
-                <strong>🔧 Developer Panel</strong>
+                <strong>🔧 CHEAT PANEL - Developer Mode</strong>
             </div>
             <div style="margin-bottom: 10px;">
-                <input type="password" id="secretCode" placeholder="Enter secret code" 
-                       style="width: 100%; padding: 5px; background: #111; color: #0f0; border: 1px solid #0f0; border-radius: 3px;">
+                <input type="password" id="cheatCodeInput" placeholder="Enter cheat code (e.g., 1337, 9999)" 
+                       style="width: 100%; padding: 8px; background: #111; color: #0f0; border: 1px solid #0f0; border-radius: 5px; margin-bottom: 10px;">
+                <button onclick="submitCheatCode()" style="width: 100%; padding: 8px; background: #0f0; color: #000; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    🔓 ACTIVATE CHEAT
+                </button>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 15px;">
-                <button onclick="stealthSystem.helper.addResources()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">+Resources</button>
-                <button onclick="stealthSystem.development.unlockFeatures()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Unlock All</button>
-                <button onclick="stealthSystem.testing.previewAllCards()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Show Cards</button>
-                <button onclick="stealthSystem.testing.autoComplete()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Auto Complete</button>
-                <button onclick="exportSaveData()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Export Data</button>
-                <button onclick="importSaveData()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Import Data</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+                <button onclick="cheatSystem.helper.addResources()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">+5000 Coins</button>
+                <button onclick="cheatSystem.helper.boostProgress()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">+5 Levels</button>
+                <button onclick="cheatSystem.helper.extraTime()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">+60 Time</button>
+                <button onclick="cheatSystem.helper.maxStats()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Max Stats</button>
+                <button onclick="cheatSystem.development.unlockFeatures()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Unlock All</button>
+                <button onclick="cheatSystem.development.completeObjectives()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Complete Level</button>
+                <button onclick="cheatSystem.testing.previewAllCards()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Show Cards</button>
+                <button onclick="cheatSystem.testing.autoComplete()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Auto Complete</button>
+                <button onclick="cheatSystem.special.godMode()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">God Mode</button>
+                <button onclick="cheatSystem.special.rainbowTheme()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Rainbow Theme</button>
             </div>
-            <div style="text-align: center;">
-                <button onclick="this.parentElement.parentElement.remove()" style="background: #f00; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer;">Close</button>
+            <div style="text-align: center; margin-top: 10px;">
+                <button onclick="this.parentElement.remove()" style="background: #f00; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">CLOSE</button>
             </div>
         `;
 
         document.body.appendChild(panel);
 
-        const codeInput = panel.querySelector('#secretCode');
-        codeInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                if (activateSecretSystem(this.value)) {
-                    this.value = '';
-                } else {
-                    this.style.borderColor = '#f00';
-                    setTimeout(() => {
-                        this.style.borderColor = '#0f0';
-                    }, 1000);
-                }
-            }
-        });
-
+        const codeInput = panel.querySelector('#cheatCodeInput');
         codeInput.focus();
 
         panel.addEventListener('click', function (e) {
@@ -1845,23 +2493,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // เริ่มต้นระบบลับ
-    function initStealthSystem() {
-        document.addEventListener('keydown', handleSecretKey);
-
-        window._gameHelper = stealthSystem.helper;
-        window._devTools = stealthSystem.development;
-        window._testMode = stealthSystem.testing;
-        window._secret = activateSecretSystem;
-        window._devPanel = openSecretPanel;
-
-        console.log('🔧 ระบบลับพร้อมใช้งาน - พิมพ์ _devPanel() ในคอนโซลเพื่อเปิดแผงควบคุม');
+    function submitCheatCode() {
+        const codeInput = document.getElementById('cheatCodeInput');
+        if (codeInput && codeInput.value) {
+            if (activateCheatSystem(codeInput.value)) {
+                codeInput.value = '';
+                codeInput.style.borderColor = '#0f0';
+            } else {
+                codeInput.style.borderColor = '#f00';
+                setTimeout(() => {
+                    codeInput.style.borderColor = '#0f0';
+                }, 1000);
+            }
+        }
     }
 
+    // เริ่มต้นระบบโกง
+    function initCheatSystem() {
+        document.addEventListener('keydown', handleCheatKey);
+
+        // ทำให้ระบบโกงสามารถเรียกใช้จากคอนโซลได้
+        window.cheatSystem = cheatSystem;
+        window.activateCheat = activateCheatSystem;
+        window.openCheatPanel = openCheatPanel;
+        window.submitCheatCode = submitCheatCode;
+
+        // console.log('🔧 ระบบโกงพร้อมใช้งาน! พิมพ์ openCheatPanel() ในคอนโซลหรือกด Shift+Ctrl+C');
+    }
+
+    // เริ่มต้นระบบโกงเมื่อโหลดหน้าเว็บ
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initStealthSystem);
+        document.addEventListener('DOMContentLoaded', initCheatSystem);
     } else {
-        initStealthSystem();
+        initCheatSystem();
     }
 
 })();

@@ -34,73 +34,6 @@
 
 <body class="theme-default">
 
-    <!-- เพิ่มส่วนนี้ก่อน Desktop Layout -->
-    <div id="mathModeSelection" class="math-mode-selection active">
-        <div class="mode-selection-container">
-            <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
-            <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
-
-            <div class="math-modes-grid">
-                <!-- พื้นฐาน (➕) -->
-                <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
-                    <div class="mode-icon">➕</div>
-                    <h3>พื้นฐาน</h3>
-                    <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
-                    <div class="difficulty-badge easy">ง่าย</div>
-                </div>
-
-                <!-- ขั้นสูง (🔢) -->
-                <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
-                    <div class="mode-icon">🔢</div>
-                    <h3>ขั้นสูง</h3>
-                    <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
-                    <div class="difficulty-badge medium">ปานกลาง</div>
-                </div>
-
-                <!-- แฟกทอเรียล (❗) -->
-                <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
-                    <div class="mode-icon">❗</div>
-                    <h3>แฟกทอเรียล</h3>
-                    <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
-                    <div class="difficulty-badge hard">ยาก</div>
-                </div>
-
-                <!-- ค่าคงที่ (π) -->
-                <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
-                    <div class="mode-icon">π</div>
-                    <h3>ค่าคงที่</h3>
-                    <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
-                    <div class="difficulty-badge medium">ปานกลาง</div>
-                </div>
-
-                <!-- เศษส่วน (⅓) -->
-                <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
-                    <div class="mode-icon">⅓</div>
-                    <h3>เศษส่วน</h3>
-                    <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
-                    <div class="difficulty-badge hard">ยาก</div>
-                </div>
-
-                <!-- ผสมผสาน (🎲) -->
-                <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
-                    <div class="mode-icon">🎲</div>
-                    <h3>ผสมผสาน</h3>
-                    <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
-                    <div class="difficulty-badge challenging">ท้าทาย</div>
-                </div>
-            </div>
-
-            <div class="selected-mode-display">
-                <div id="selectedModeInfo" class="selected-mode-info">
-                    <span id="selectedModeText">ยังไม่ได้เลือกโหมด</span>
-                </div>
-                <button id="startGameWithMode" class="action-btn btn-start" disabled>
-                    🚀 เริ่มเกม
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Desktop Layout -->
     <div class="desktop-layout">
         <div class="left-panel">
@@ -134,7 +67,6 @@
             <div class="controls-card">
                 <h3>🎮 การควบคุม</h3>
                 <div class="control-buttons">
-                    <button id="startBtn-desktop" class="btn-start" aria-label="เริ่มเกม">เริ่มเกม</button>
                     <button id="pauseBtn-desktop" class="btn-pause" aria-label="หยุดหรือเล่นต่อเกม">⏸️ หยุด</button>
                     <button id="settingsBtn-desktop" class="btn-settings" aria-label="ตั้งค่าเกม">ตั้งค่า</button>
                     <button id="soundBtn-desktop" class="btn-sound" aria-label="เปิดหรือปิดเสียง">🔊 เสียง</button>
@@ -146,6 +78,60 @@
                 <h1>🎮 Math Match Ultimate 🎮</h1>
             </div>
             <div class="game-board-wrapper">
+                <!-- เพิ่มส่วนเลือกโหมดที่นี่ -->
+                <div id="mathModeSelection-desktop" class="math-mode-selection-inline active">
+                    <div class="mode-selection-container-inline">
+                        <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
+                        <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
+                        <div class="math-modes-grid-inline">
+                            <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
+                                <div class="mode-icon">➕</div>
+                                <h3>พื้นฐาน</h3>
+                                <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
+                                <div class="mode-icon">🔢</div>
+                                <h3>ขั้นสูง</h3>
+                                <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
+                                <div class="difficulty-badge medium">ปานกลาง</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
+                                <div class="mode-icon">❗</div>
+                                <h3>แฟกทอเรียล</h3>
+                                <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
+                                <div class="difficulty-badge hard">ยาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
+                                <div class="mode-icon">π</div>
+                                <h3>ค่าคงที่</h3>
+                                <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
+                                <div class="difficulty-badge medium">ปานกลาง</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
+                                <div class="mode-icon">⅓</div>
+                                <h3>เศษส่วน</h3>
+                                <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
+                                <div class="difficulty-badge hard">ยาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
+                                <div class="mode-icon">🎲</div>
+                                <h3>ผสมผสาน</h3>
+                                <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
+                                <div class="difficulty-badge challenging">ท้าทาย</div>
+                            </div>
+                        </div>
+                        <div class="selected-mode-display-inline">
+                            <div id="selectedModeInfo-desktop" class="selected-mode-info">
+                                <span id="selectedModeText-desktop">ยังไม่ได้เลือกโหมด</span>
+                            </div>
+                            <button id="startGameWithMode-desktop" class="action-btn btn-start" disabled>
+                                🚀 เริ่มเกม
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- ส่วนกระดานเกม -->
                 <div id="gameBoard-desktop" class="game-board"></div>
             </div>
             <div id="combo-desktop" class="combo-indicator"></div>
@@ -206,10 +192,65 @@
         </div>
         <div class="game-area">
             <div class="game-board-wrapper">
+                <!-- เพิ่มส่วนเลือกโหมดที่นี่ -->
+                <div id="mathModeSelection-mobile" class="math-mode-selection-inline active">
+                    <div class="mode-selection-container-inline">
+                        <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
+                        <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
+                        <div class="math-modes-grid-inline">
+                            <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
+                                <div class="mode-icon">➕</div>
+                                <h3>พื้นฐาน</h3>
+                                <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
+                                <div class="mode-icon">🔢</div>
+                                <h3>ขั้นสูง</h3>
+                                <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
+                                <div class="difficulty-badge medium">ปานกลาง</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
+                                <div class="mode-icon">❗</div>
+                                <h3>แฟกทอเรียล</h3>
+                                <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
+                                <div class="difficulty-badge hard">ยาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
+                                <div class="mode-icon">π</div>
+                                <h3>ค่าคงที่</h3>
+                                <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
+                                <div class="difficulty-badge medium">ปานกลาง</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
+                                <div class="mode-icon">⅓</div>
+                                <h3>เศษส่วน</h3>
+                                <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
+                                <div class="difficulty-badge hard">ยาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
+                                <div class="mode-icon">🎲</div>
+                                <h3>ผสมผสาน</h3>
+                                <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
+                                <div class="difficulty-badge challenging">ท้าทาย</div>
+                            </div>
+                        </div>
+                        <div class="selected-mode-display-inline">
+                            <div id="selectedModeInfo-mobile" class="selected-mode-info">
+                                <span id="selectedModeText-mobile">ยังไม่ได้เลือกโหมด</span>
+                            </div>
+                            <button id="startGameWithMode-mobile" class="action-btn btn-start" disabled>
+                                🚀 เริ่มเกม
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- ส่วนกระดานเกม -->
                 <div id="gameBoard-mobile" class="game-board"></div>
             </div>
             <div id="combo-mobile" class="combo-indicator"></div>
         </div>
+        <!-- ส่วนที่เหลือเหมือนเดิม -->
         <div class="secondary-stats">
             <div class="stat-item">
                 <span class="stat-label">เหรียญ</span>
@@ -221,7 +262,6 @@
             </div>
         </div>
         <div class="action-bar">
-            <button id="startBtn-mobile" class="action-btn btn-start" aria-label="เริ่มเกม">🎮 เริ่มเกม</button>
             <button id="settingsBtn-mobile" class="action-btn btn-settings" aria-label="ตั้งค่าเกม">⚙️
                 ตั้งค่าเกม</button>
         </div>
@@ -264,6 +304,11 @@
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <h2>⚙️ ตั้งค่าเกม</h2>
+            <!-- เพิ่มส่วน Daily Rewards -->
+            <h3>🎁 รางวัลประจำวัน</h3>
+            <div id="dailyRewardsInfo">
+                <!-- จะถูกเติมด้วย JavaScript -->
+            </div>
             <h3>🎨 เลือกธีม</h3>
             <div class="theme-selector">
                 <div class="theme-btn default" data-theme="default" aria-label="เลือกธีมดีฟอลต์"></div>
@@ -354,6 +399,123 @@
     </div>
 
     <div id="notification-container"></div>
+
+    <footer class="game-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>🎮 Math Match Ultimate</h4>
+                <p>เกมคณิตศาสตร์ที่ท้าทายและสนุกสนาน</p>
+                <p>พัฒนาด้วย HTML5, CSS3 และ JavaScript</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>📚 ระดับการศึกษา</h4>
+                <p>มัธยมศึกษาปีที่ 1-6</p>
+                <p>โหมดโอลิมปิกคณิตศาสตร์</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>👨‍💻 ผู้พัฒนา</h4>
+                <p>พัฒนาโดยทีมงาน ertyu007</p>
+                <p>เวอร์ชัน 1.1 Ultimate</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>🔗 ลิงก์ที่เกี่ยวข้อง</h4>
+                <div class="footer-links">
+                    <a href="https://github.com/ertyu007/MathMatchUltimate" target="_blank"
+                        aria-label="GitHub Repository">
+                        <span class="link-icon">📂</span> GitHub
+                    </a>
+                    <a href="#" id="showCreditsBtn" aria-label="แสดงเครดิตเต็ม">
+                        <span class="link-icon">👨‍💻</span> เครดิตเต็ม
+                    </a>
+                    <a href="#" id="privacyPolicyBtn" aria-label="นโยบายความเป็นส่วนตัว">
+                        <span class="link-icon">🔒</span> นโยบายความเป็นส่วนตัว
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024 Math Match Ultimate. สงวนลิขสิทธิ์.</p>
+            <p>สร้างขึ้นเพื่อส่งเสริมการเรียนรู้คณิตศาสตร์อย่างสนุกสนาน</p>
+        </div>
+    </footer>
+
+    <!-- Modal สำหรับแสดงเครดิตเต็ม -->
+    <div id="creditsModal" class="modal">
+        <div class="modal-content">
+            <h2>👨‍💻 เครดิตเต็ม</h2>
+            <div class="credits-content">
+                <div class="credit-category">
+                    <h3>🎮 การพัฒนาเกม</h3>
+                    <ul>
+                        <li><strong>ertyu007</strong> - ผู้พัฒนาเต็มรูปแบบ</li>
+                        <li><strong>Math Match Team</strong> - ทีมทดสอบและให้คำแนะนำ</li>
+                    </ul>
+                </div>
+
+                <div class="credit-category">
+                    <h3>📚 เนื้อหาคณิตศาสตร์</h3>
+                    <ul>
+                        <li>หลักสูตรคณิตศาสตร์ ระดับมัธยมศึกษา</li>
+                        <li>โจทย์ปัญหาโอลิมปิกคณิตศาสตร์</li>
+                        <li>แบบฝึกหัดจากแหล่งข้อมูลทางการศึกษา</li>
+                    </ul>
+                </div>
+
+                <div class="credit-category">
+                    <h3>🎨 การออกแบบ</h3>
+                    <ul>
+                        <li>ธีมสีและ UI/UX โดยทีมออกแบบ</li>
+                        <li>ระบบไอเทมและความสำเร็จ</li>
+                        <li>เอฟเฟกต์ภาพและเสียง</li>
+                    </ul>
+                </div>
+
+                <div class="credit-category">
+                    <h3>🙏 ขอบคุณ</h3>
+                    <ul>
+                        <li>ผู้เล่นทุกท่านสำหรับคำติชม</li>
+                        <li>ชุมชนโอเพนซอร์สสำหรับไลบรารีและเครื่องมือ</li>
+                        <li>นักการศึกษาสำหรับคำแนะนำด้านเนื้อหา</li>
+                    </ul>
+                </div>
+            </div>
+            <button class="action-btn btn-settings" onclick="closeCreditsModal()">ปิด</button>
+        </div>
+    </div>
+
+    <!-- Modal สำหรับนโยบายความเป็นส่วนตัว -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <h2>🔒 นโยบายความเป็นส่วนตัว</h2>
+            <div class="privacy-content">
+                <h3>การเก็บข้อมูล</h3>
+                <p>Math Match Ultimate เก็บข้อมูลเฉพาะในเครื่องของคุณผ่าน Local Storage:</p>
+                <ul>
+                    <li>ความคืบหน้าในเกม (ด่าน, คะแนน, เหรียญ)</li>
+                    <li>สถิติการเล่น (จำนวนเกม, คอมโบสูงสุด)</li>
+                    <li>ความสำเร็จที่ปลดล็อคแล้ว</li>
+                    <li>การตั้งค่า (ธีม, โหมดเกม, เสียง)</li>
+                </ul>
+
+                <h3>ข้อมูลที่เราไม่เก็บ</h3>
+                <ul>
+                    <li>ข้อมูลส่วนตัวใดๆ</li>
+                    <li>ที่อยู่ IP หรือข้อมูลการติดตาม</li>
+                    <li>ข้อมูลการชำระเงิน</li>
+                </ul>
+
+                <h3>สิทธิ์ของคุณ</h3>
+                <p>คุณสามารถล้างข้อมูลเกมทั้งหมดได้ผ่านเมนูตั้งค่า หรือใช้ระบบลับ (รหัส 0000) ในแผงควบคุมนักพัฒนา</p>
+
+                <p class="privacy-note">เกมนี้เป็นโปรเจกต์โอเพนซอร์สและไม่มีการแบ่งปันข้อมูลกับบุคคลที่สาม</p>
+            </div>
+            <button class="action-btn btn-settings" onclick="closePrivacyModal()">เข้าใจแล้ว</button>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 
