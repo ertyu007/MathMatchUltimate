@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Match Ultimate</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="theme-default">
+
+    <!-- เพิ่มส่วนนี้ก่อน Desktop Layout -->
+    <div id="mathModeSelection" class="math-mode-selection active">
+        <div class="mode-selection-container">
+            <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
+            <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
+
+            <div class="math-modes-grid">
+                <!-- พื้นฐาน (➕) -->
+                <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
+                    <div class="mode-icon">➕</div>
+                    <h3>พื้นฐาน</h3>
+                    <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
+                    <div class="difficulty-badge easy">ง่าย</div>
+                </div>
+
+                <!-- ขั้นสูง (🔢) -->
+                <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
+                    <div class="mode-icon">🔢</div>
+                    <h3>ขั้นสูง</h3>
+                    <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
+                    <div class="difficulty-badge medium">ปานกลาง</div>
+                </div>
+
+                <!-- แฟกทอเรียล (❗) -->
+                <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
+                    <div class="mode-icon">❗</div>
+                    <h3>แฟกทอเรียล</h3>
+                    <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
+                    <div class="difficulty-badge hard">ยาก</div>
+                </div>
+
+                <!-- ค่าคงที่ (π) -->
+                <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
+                    <div class="mode-icon">π</div>
+                    <h3>ค่าคงที่</h3>
+                    <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
+                    <div class="difficulty-badge medium">ปานกลาง</div>
+                </div>
+
+                <!-- เศษส่วน (⅓) -->
+                <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
+                    <div class="mode-icon">⅓</div>
+                    <h3>เศษส่วน</h3>
+                    <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
+                    <div class="difficulty-badge hard">ยาก</div>
+                </div>
+
+                <!-- ผสมผสาน (🎲) -->
+                <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
+                    <div class="mode-icon">🎲</div>
+                    <h3>ผสมผสาน</h3>
+                    <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
+                    <div class="difficulty-badge challenging">ท้าทาย</div>
+                </div>
+            </div>
+
+            <div class="selected-mode-display">
+                <div id="selectedModeInfo" class="selected-mode-info">
+                    <span id="selectedModeText">ยังไม่ได้เลือกโหมด</span>
+                </div>
+                <button id="startGameWithMode" class="action-btn btn-start" disabled>
+                    🚀 เริ่มเกม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="desktop-layout">
+        <div class="left-panel">
+            <div class="status-card">
+                <h3>📊 สถานะเกม</h3>
+                <div class="main-stats">
+                    <div class="stat-large">
+                        <div class="stat-value" id="timer-desktop">60</div>
+                        <div class="stat-label">เวลา</div>
+                    </div>
+                    <div class="stat-large">
+                        <div class="stat-value" id="score-desktop">0</div>
+                        <div class="stat-label">คะแนน</div>
+                    </div>
+                </div>
+                <div class="secondary-stats-grid">
+                    <div class="stat-small">
+                        <div class="stat-label">ด่าน</div>
+                        <div class="stat-value" id="level-desktop">1</div>
+                    </div>
+                    <div class="stat-small">
+                        <div class="stat-label">เหรียญ</div>
+                        <div class="stat-value" id="coins-desktop">100</div>
+                    </div>
+                    <div class="stat-small">
+                        <div class="stat-label">จับคู่</div>
+                        <div class="stat-value" id="pairs-desktop">0/0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls-card">
+                <h3>🎮 การควบคุม</h3>
+                <div class="control-buttons">
+                    <button id="startBtn-desktop" class="btn-start" aria-label="เริ่มเกม">เริ่มเกม</button>
+                    <button id="pauseBtn-desktop" class="btn-pause" aria-label="หยุดหรือเล่นต่อเกม">⏸️ หยุด</button>
+                    <button id="settingsBtn-desktop" class="btn-settings" aria-label="ตั้งค่าเกม">ตั้งค่า</button>
+                    <button id="soundBtn-desktop" class="btn-sound" aria-label="เปิดหรือปิดเสียง">🔊 เสียง</button>
+                </div>
+            </div>
+        </div>
+        <div class="center-panel">
+            <div class="header">
+                <h1>🎮 Math Match Ultimate 🎮</h1>
+            </div>
+            <div class="game-board-wrapper">
+                <div id="gameBoard-desktop" class="game-board"></div>
+            </div>
+            <div id="combo-desktop" class="combo-indicator"></div>
+        </div>
+        <div class="right-panel">
+            <div class="powerups-card">
+                <h3>⚡ ไอเทมพิเศษ</h3>
+                <div class="powerups-grid">
+                    <div class="powerup" data-type="time" aria-label="เพิ่มเวลา 15 วินาที ใช้ 20 เหรียญ">
+                        <span class="icon">⏰</span>
+                        <div class="powerup-info">
+                            <div class="powerup-name">เพิ่มเวลา</div>
+                            <div class="powerup-desc">+15 วินาที</div>
+                        </div>
+                        <span class="cost">💰 20</span>
+                    </div>
+                    <div class="powerup" data-type="hint" aria-label="แสดงคำใบ้ ใช้ 30 เหรียญ">
+                        <span class="icon">💡</span>
+                        <div class="powerup-info">
+                            <div class="powerup-name">คำใบ้</div>
+                            <div class="powerup-desc">แสดงคู่ 2 วิ</div>
+                        </div>
+                        <span class="cost">💰 30</span>
+                    </div>
+                    <div class="powerup" data-type="remove" aria-label="ลบคู่โดยอัตโนมัติ ใช้ 40 เหรียญ">
+                        <span class="icon">🎯</span>
+                        <div class="powerup-info">
+                            <div class="powerup-name">ลบคู่</div>
+                            <div class="powerup-desc">ลบอัตโนมัติ</div>
+                        </div>
+                        <span class="cost">💰 40</span>
+                    </div>
+                    <div class="powerup" data-type="freeze" aria-label="หยุดเวลา 5 วินาที ใช้ 50 เหรียญ">
+                        <span class="icon">❄️</span>
+                        <div class="powerup-info">
+                            <div class="powerup-name">หยุดเวลา</div>
+                            <div class="powerup-desc">หยุด 5 วิ</div>
+                        </div>
+                        <span class="cost">💰 50</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Layout -->
+    <div class="mobile-layout">
+        <div class="game-header">
+            <div class="primary-stats">
+                <div class="stat-timer"><span class="stat-icon">⏱️</span><span id="timer-mobile">60</span></div>
+                <div class="stat-score"><span class="stat-icon">⭐</span><span id="score-mobile">0</span></div>
+                <div class="stat-level"><span class="stat-icon">🎯</span><span id="level-mobile">1</span></div>
+            </div>
+            <div class="header-controls">
+                <button id="soundBtn-mobile" class="btn-icon" aria-label="เปิดหรือปิดเสียง">🔊</button>
+                <button id="pauseBtn-mobile" class="btn-icon" aria-label="หยุดหรือเล่นต่อเกม">⏸️</button>
+            </div>
+        </div>
+        <div class="game-area">
+            <div class="game-board-wrapper">
+                <div id="gameBoard-mobile" class="game-board"></div>
+            </div>
+            <div id="combo-mobile" class="combo-indicator"></div>
+        </div>
+        <div class="secondary-stats">
+            <div class="stat-item">
+                <span class="stat-label">เหรียญ</span>
+                <span class="stat-value" id="coins-mobile">💰100</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">จับคู่</span>
+                <span class="stat-value" id="pairs-mobile">0/0</span>
+            </div>
+        </div>
+        <div class="action-bar">
+            <button id="startBtn-mobile" class="action-btn btn-start" aria-label="เริ่มเกม">🎮 เริ่มเกม</button>
+            <button id="settingsBtn-mobile" class="action-btn btn-settings" aria-label="ตั้งค่าเกม">⚙️
+                ตั้งค่าเกม</button>
+        </div>
+        <div class="powerups-section">
+            <div id="powerupsToggle" class="section-toggle">⚡ ไอเทมพิเศษ ▼</div>
+            <div id="powerupsContainer" class="powerups-container">
+                <div class="powerup-mobile" data-type="time" aria-label="เพิ่มเวลา 15 วินาที ใช้ 20 เหรียญ">
+                    <span class="powerup-icon">⏰</span>
+                    <div class="powerup-details">
+                        <div class="powerup-name">เพิ่มเวลา</div>
+                        <div class="powerup-cost">💰 20</div>
+                    </div>
+                </div>
+                <div class="powerup-mobile" data-type="hint" aria-label="แสดงคำใบ้ ใช้ 30 เหรียญ">
+                    <span class="powerup-icon">💡</span>
+                    <div class="powerup-details">
+                        <div class="powerup-name">คำใบ้</div>
+                        <div class="powerup-cost">💰 30</div>
+                    </div>
+                </div>
+                <div class="powerup-mobile" data-type="remove" aria-label="ลบคู่โดยอัตโนมัติ ใช้ 40 เหรียญ">
+                    <span class="powerup-icon">🎯</span>
+                    <div class="powerup-details">
+                        <div class="powerup-name">ลบคู่</div>
+                        <div class="powerup-cost">💰 40</div>
+                    </div>
+                </div>
+                <div class="powerup-mobile" data-type="freeze" aria-label="หยุดเวลา 5 วินาที ใช้ 50 เหรียญ">
+                    <span class="powerup-icon">❄️</span>
+                    <div class="powerup-details">
+                        <div class="powerup-name">หยุดเวลา</div>
+                        <div class="powerup-cost">💰 50</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h2>⚙️ ตั้งค่าเกม</h2>
+            <h3>🎨 เลือกธีม</h3>
+            <div class="theme-selector">
+                <div class="theme-btn default" data-theme="default" aria-label="เลือกธีมดีฟอลต์"></div>
+                <div class="theme-btn light" data-theme="light" aria-label="เลือกธีมสว่าง"></div>
+                <div class="theme-btn dark" data-theme="dark" aria-label="เลือกธีมมืด"></div>
+                <div class="theme-btn cute" data-theme="cute" aria-label="เลือกธีมน่ารัก"></div>
+                <div class="theme-btn nature" data-theme="nature" aria-label="เลือกธีมธรรมชาติ"></div>
+            </div>
+            <h3>🕹️ โหมดเกม</h3>
+            <div class="mode-selector">
+                <div class="mode-card" data-mode="normal" aria-label="เลือกโหมดปกติ">
+                    <h4>ปกติ</h4>
+                    <p>จับคู่ธรรมดา</p>
+                </div>
+                <div class="mode-card" data-mode="speed" aria-label="เลือกโหมดความเร็ว">
+                    <h4>ความเร็ว</h4>
+                    <p>เวลาลดลง ⏳</p>
+                </div>
+                <div class="mode-card" data-mode="hardcore" aria-label="เลือกโหมดฮาร์ดคอร์">
+                    <h4>ฮาร์ดคอร์</h4>
+                    <p>ผิดคู่เวลาลด 💀</p>
+                </div>
+                <div class="mode-card" data-mode="memory" aria-label="เลือกโหมดความจำ">
+                    <h4>ความจำ</h4>
+                    <p>จำตำแหน่งก่อน 🔍</p>
+                </div>
+            </div>
+            <h3>🏆 ความสำเร็จ</h3>
+            <div id="achievementsContainer" class="achievements"></div>
+            <button id="saveSettingsBtn" class="action-btn btn-settings" aria-label="บันทึกการตั้งค่า">✅
+                บันทึกการตั้งค่า</button>
+        </div>
+    </div>
+
+    <div id="victoryModal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 ด่านสำเร็จ!</h2>
+            <div id="starsDisplay" class="stars">
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+            </div>
+            <div class="game-over-stats">
+                <div>คะแนนรวม: <span id="finalScore">0</span></div>
+                <div>เหรียญที่ได้รับ: <span id="coinsEarned">0</span></div>
+                <div>คอมโบสูงสุด: <span id="bestComboDisplay">0</span></div>
+            </div>
+            <h3>ความคืบหน้า</h3>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill">0%</div>
+            </div>
+            <div class="game-over-buttons">
+                <button id="nextLevelBtn" class="action-btn btn-start" aria-label="ไปยังด่านต่อไป">🎮 ด่านต่อไป
+                    ➡️</button>
+                <button id="returnMenuBtn" class="action-btn btn-settings" aria-label="กลับสู่เมนูหลัก">🏠
+                    กลับเมนูหลัก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2>⏰ หมดเวลา!</h2>
+            <div class="game-over-icon">😵</div>
+            <div class="game-over-stats">
+                <div>คะแนน: <span id="gameOverScore">0</span></div>
+                <div>เหรียญ: <span id="gameOverCoins">0</span></div>
+                <div>ด่าน: <span id="gameOverLevel">1</span></div>
+                <div>คอมโบสูงสุด: <span id="gameOverCombo">0</span></div>
+            </div>
+            <div class="game-over-buttons">
+                <button id="restartBtn" class="action-btn btn-start" aria-label="เล่นอีกครั้ง">🔄 เล่นอีกครั้ง</button>
+                <button id="returnMenuGameOverBtn" class="action-btn btn-settings" aria-label="กลับสู่เมนูหลัก">🏠
+                    กลับเมนูหลัก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pauseModal" class="modal">
+        <div class="modal-content">
+            <h2>⏸️ เกมหยุดชั่วคราว</h2>
+            <p>กดปุ่ม "เล่นต่อ" เพื่อกลับสู่เกม</p>
+            <div class="game-over-buttons">
+                <button id="resumeBtn" class="action-btn btn-start" aria-label="เล่นต่อ">▶️ เล่นต่อ</button>
+                <button id="exitGameBtn" class="action-btn btn-settings" aria-label="ออกจากเกม">🏠 ออกจากเกม</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-container"></div>
+    <script src="script.js"></script>
+</body>
+
+</html>
