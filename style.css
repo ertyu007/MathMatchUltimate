@@ -2764,3 +2764,68 @@ body.freeze-effect {
 /* .math-mode-card[data-difficulty="very-easy"] {
     background: linear-gradient(135deg, rgba(24, 40, 72, 0.95), rgba(75, 108, 183, 0.95));
 } */
+
+/* ========================================
+   MODAL LOCK BACKGROUND SYSTEM
+   ======================================== */
+
+.modal.active {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(24, 40, 72, 0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    overflow: hidden;
+}
+
+/* ป้องกันการ scroll เมื่อ modal เปิด */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* ปุ่มใน modal ที่ไม่ควรล็อก */
+.modal-content button {
+    pointer-events: auto;
+}
+
+/* พื้นหลัง modal ที่คลิกไม่ได้ */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    cursor: not-allowed;
+}
+
+/* ล็อกการ์ดเกมเมื่อ modal เปิด */
+body.modal-open .card {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* ล็อกปุ่มควบคุมเมื่อ modal เปิด */
+body.modal-open .control-buttons button,
+body.modal-open .header-controls button,
+body.modal-open .action-bar button {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* ล็อกไอเทมพิเศษเมื่อ modal เปิด */
+body.modal-open .powerup,
+body.modal-open .powerup-mobile {
+    pointer-events: none;
+    opacity: 0.6;
+}

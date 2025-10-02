@@ -764,6 +764,72 @@ function resetGameData() {
 }
 
 // =============================================
+// 🎮 MODAL MANAGEMENT SYSTEM
+// =============================================
+
+let activeModal = null;
+
+function openModal(modalElement) {
+    if (activeModal) {
+        closeModal(activeModal);
+    }
+
+    activeModal = modalElement;
+
+    // หยุดเวลาเกม
+    if (gameState.isGameActive && !gameState.isPaused) {
+        gameState.wasPausedBeforeModal = false;
+        gameState.isPaused = true;
+    } else {
+        gameState.wasPausedBeforeModal = gameState.isPaused;
+    }
+
+    // ล็อกพื้นหลัง
+    document.body.classList.add('modal-open');
+
+    // แสดง modal
+    modalElement.classList.add('active');
+
+    // ป้องกันการคลิกพื้นหลัง
+    modalElement.style.pointerEvents = 'auto';
+
+    // อัพเดตปุ่ม pause
+    updateControlButtons();
+
+    console.log('🔒 Modal เปิด - เวลาหยุด, พื้นหลังล็อก');
+}
+
+function closeModal(modalElement) {
+    modalElement.classList.remove('active');
+    document.body.classList.remove('modal-open');
+
+    // คืนสถานะการเล่นเกม
+    if (gameState.isGameActive) {
+        if (!gameState.wasPausedBeforeModal) {
+            gameState.isPaused = false;
+        }
+    }
+
+    activeModal = null;
+
+    // อัพเดตปุ่ม pause
+    updateControlButtons();
+
+    console.log('🔓 Modal ปิด - เวลาเริ่มใหม่, พื้นหลังปลดล็อก');
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        closeModal(modal);
+    });
+}
+
+// ตรวจสอบว่ามี modal เปิดอยู่หรือไม่
+function isAnyModalOpen() {
+    return document.querySelector('.modal.active') !== null;
+}
+
+// =============================================
 // 🎮 GAME FUNCTIONS - 9999 LEVELS
 // =============================================
 
@@ -992,6 +1058,11 @@ function updateDisplay() {
 }
 
 function flipCard(card) {
+    if (isAnyModalOpen()) {
+        playSound('wrong');
+        return;
+    }
+
     if (!canFlip || card.classList.contains('flipped') ||
         card.classList.contains('matched') || gameState.isPaused ||
         !gameState.isGameActive || flippedCards.length >= 2) {
@@ -1080,15 +1151,16 @@ function checkMatch() {
 function startTimer() {
     if (timer) cancelAnimationFrame(timer);
     lastTime = null;
-    
+
     function tick(currentTime) {
         if (!lastTime) lastTime = currentTime;
-        
-        // ใช้เวลาแบบ milliseconds แทน seconds
+
         const elapsed = currentTime - lastTime;
-        
-        if (elapsed >= 1000 && !gameState.isPaused && !freezeTime && gameState.isGameActive) {
-            // ลดเวลาลง 1 วินาทีพอดี
+
+        // หยุดเวลาเมื่อมี modal เปิดหรือเกมหยุด
+        const shouldStopTime = gameState.isPaused || freezeTime || !gameState.isGameActive || isAnyModalOpen();
+
+        if (elapsed >= 1000 && !shouldStopTime) {
             gameState.timeLeft -= 1;
             updateDisplay();
             lastTime = currentTime;
@@ -1201,7 +1273,10 @@ function gameOver() {
 }
 
 function closeGameOver() {
-    if (selectors.gameOverModal) selectors.gameOverModal.classList.remove('active');
+    const gameOverModal = document.getElementById('gameOverModal');
+    if (gameOverModal) {
+        closeModal(gameOverModal);
+    }
     resetGame();
 }
 
@@ -1250,6 +1325,8 @@ function showVictory(stars, coins) {
             selectors.progressFill.classList.add('epic');
         }
     }
+    const victoryModal = document.getElementById('victoryModal');
+    openModal(victoryModal);
 
     showSpecialLevelMessage();
     selectors.victoryModal.classList.add('active');
@@ -1273,7 +1350,10 @@ function showSpecialLevelMessage() {
 }
 
 function closeVictory() {
-    if (selectors.victoryModal) selectors.victoryModal.classList.remove('active');
+    const victoryModal = document.getElementById('victoryModal');
+    if (victoryModal) {
+        closeModal(victoryModal);
+    }
     document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
     resetGame();
 }
@@ -1324,14 +1404,14 @@ function resetGame() {
 }
 
 function usePowerup(type) {
-    if (!gameState.isGameActive) {
-        showImportantNotification('เริ่มเกมก่อนใช้ไอเทม!', 'warning', '⚠️');
+    // ไม่สามารถใช้ไอเทมได้เมื่อมี modal เปิด
+    if (isAnyModalOpen()) {
+        showImportantNotification('ปิด modal ก่อนใช้ไอเทม!', 'warning', '⚠️');
         return;
     }
 
-    const cost = config.powerupCosts[type];
-    if (gameState.coins < cost) {
-        showImportantNotification('💰 เหรียญไม่พอ!', 'warning', '💰');
+    if (!gameState.isGameActive) {
+        showImportantNotification('เริ่มเกมก่อนใช้ไอเทม!', 'warning', '⚠️');
         return;
     }
 
@@ -1499,14 +1579,119 @@ function togglePause() {
 }
 
 function openSettings() {
-    if (selectors.settingsModal) selectors.settingsModal.classList.add('active');
-    updateDailyRewardsInfo();
-    playSound('button');
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) {
+        openModal(settingsModal);
+        updateDailyRewardsInfo();
+        playSound('button');
+    }
 }
 
 function closeSettings() {
-    if (selectors.settingsModal) selectors.settingsModal.classList.remove('active');
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) {
+        closeModal(settingsModal);
+        playSound('button');
+    }
+}
+
+function showVictory(stars, coins) {
+    if (!selectors.victoryModal || !selectors.starsDisplay) return;
+
+    // ... โค้ดเดิม ...
+
+    const victoryModal = document.getElementById('victoryModal');
+    openModal(victoryModal);
+}
+
+function closeVictory() {
+    const victoryModal = document.getElementById('victoryModal');
+    if (victoryModal) {
+        closeModal(victoryModal);
+    }
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+    resetGame();
+}
+
+function gameOver() {
+    cancelAnimationFrame(timer);
+    gameState.isGameActive = false;
+
+    saveGame();
+    playSound('gameover');
+
+    if (selectors.gameOverScore) selectors.gameOverScore.textContent = gameState.score;
+    if (selectors.gameOverCoins) selectors.gameOverCoins.textContent = gameState.coins;
+    if (selectors.gameOverLevel) selectors.gameOverLevel.textContent = gameState.level;
+    if (selectors.gameOverCombo) selectors.gameOverCombo.textContent = gameState.bestCombo;
+
+    const gameOverModal = document.getElementById('gameOverModal');
+    if (gameOverModal) {
+        openModal(gameOverModal);
+    }
+}
+
+function closeGameOver() {
+    const gameOverModal = document.getElementById('gameOverModal');
+    if (gameOverModal) {
+        closeModal(gameOverModal);
+    }
+    resetGame();
+}
+
+function togglePause() {
+    if (!gameState.isGameActive) return;
+
+    // ถ้ามี modal เปิดอยู่ ให้ไม่สามารถ pause ได้
+    if (isAnyModalOpen() && !gameState.isPaused) {
+        showImportantNotification('ปิด modal ก่อนเพื่อเล่นเกมต่อ', 'warning', '⚠️');
+        return;
+    }
+
+    gameState.isPaused = !gameState.isPaused;
+    updateControlButtons();
+
+    const pauseModal = document.getElementById('pauseModal');
+    if (pauseModal) {
+        if (gameState.isPaused) {
+            openModal(pauseModal);
+        } else {
+            closeModal(pauseModal);
+        }
+    }
     playSound('button');
+}
+
+function openCreditsModal() {
+    const creditsModal = document.getElementById('creditsModal');
+    if (creditsModal) {
+        openModal(creditsModal);
+        playSound('button');
+    }
+}
+
+function closeCreditsModal() {
+    const creditsModal = document.getElementById('creditsModal');
+    if (creditsModal) {
+        closeModal(creditsModal);
+        playSound('button');
+    }
+}
+
+function openPrivacyModal() {
+    const privacyModal = document.getElementById('privacyModal');
+    if (privacyModal) {
+        openModal(privacyModal);
+        playSound('button');
+    }
+}
+
+function closePrivacyModal() {
+    const privacyModal = document.getElementById('privacyModal');
+    if (privacyModal) {
+        closeModal(privacyModal);
+        playSound('button');
+    }
 }
 
 function changeTheme(themeName) {
@@ -1648,6 +1833,11 @@ function updateAchievements() {
 }
 
 function togglePowerupsSection() {
+    // ไม่สามารถเปิดปิดไอเทมได้เมื่อมี modal เปิด
+    if (isAnyModalOpen()) {
+        return;
+    }
+    
     if (!selectors.powerupsContainer || !selectors.powerupsToggle) return;
     if (selectors.powerupsContainer.classList.contains('expanded')) {
         selectors.powerupsContainer.classList.remove('expanded');
@@ -2173,14 +2363,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Modal close on background click
+    // Modal close on background click - แก้ไขใหม่
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 playSound('button');
-                modal.classList.remove('active');
+                closeModal(modal);
             }
         });
+    });
+
+    // ปุ่ม ESC เพื่อปิด modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeModal) {
+            playSound('button');
+            closeModal(activeModal);
+        }
     });
 
     // Powerups toggle
