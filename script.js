@@ -6,9 +6,11 @@ const config = {
     powerupCosts: { time: 20, hint: 30, remove: 40, freeze: 50 },
     scoring: { basePoints: 10, timeBonusMultiplier: 2, starThresholds: [20, 40] },
     difficulties: {
-        easy: { pairs: 4, time: 60 },
-        medium: { pairs: 6, time: 60 },
-        hard: { pairs: 8, time: 60 }
+        'very-easy': { pairs: 4, time: 90 },
+        'easy': { pairs: 5, time: 75 },
+        'medium': { pairs: 6, time: 60 },
+        'hard': { pairs: 8, time: 50 },
+        'challenging': { pairs: 10, time: 45 }
     },
     // เพิ่มการตั้งค่าสำหรับด่านสูงๆ
     maxLevel: 9999,
@@ -120,6 +122,22 @@ const selectors = {
 
 // ฐานข้อมูลโหมดคณิตศาสตร์ ระดับมัธยมศึกษา
 const mathModesDB = {
+    beginner: {
+        name: "เริ่มต้น",
+        icon: "👶",
+        difficulty: "very-easy",
+        questions: [
+            { q: "2 + 3", a: "5" },
+            { q: "7 - 2", a: "5" },
+            { q: "4 × 3", a: "12" },
+            { q: "10 ÷ 2", a: "5" },
+            { q: "8 + 1", a: "9" },
+            { q: "6 - 3", a: "3" },
+            { q: "5 × 2", a: "10" },
+            { q: "9 ÷ 3", a: "3" }
+        ]
+    },
+
     m1: {
         name: "มัธยม 1",
         icon: "🔢",
@@ -402,6 +420,17 @@ const achievementsList = [
     }
 ];
 
+// เพิ่มฟังก์ชันแนะนำโหมด
+function recommendMathMode() {
+    if (gameState.level <= 5) return 'beginner';
+    if (gameState.level <= 10) return 'm1';
+    if (gameState.level <= 20) return 'm2';
+    if (gameState.level <= 30) return 'm3';
+    if (gameState.level <= 40) return 'm4';
+    if (gameState.level <= 50) return 'm5';
+    return 'm6';
+}
+
 // =============================================
 // 🎮 OPTIMIZED NOTIFICATION SYSTEM
 // =============================================
@@ -474,36 +503,13 @@ function processNotificationQueue() {
     }, 3000);
 }
 
-// ฟังก์ชันแสดง achievement ที่ปลดล็อคพร้อมเอฟเฟกต์
+// ฟังก์ชันแสดง achievement ที่ปลดล็อค - แสดงแค่ notification
 function showAchievementUnlocked(achievement) {
-    const popup = document.createElement('div');
-    popup.classList.add('achievement-unlocked', achievement.rarity);
-    popup.innerHTML = `
-        <div class="achievement-popup">
-            <div class="achievement-icon">${achievement.icon}</div>
-            <div class="achievement-content">
-                <div class="achievement-title">🏆 ปลดล็อคความสำเร็จ!</div>
-                <div class="achievement-name">${achievement.name}</div>
-                <div class="achievement-rarity">${getRarityText(achievement.rarity)}</div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(popup);
-
-    // ลบ popup หลังจาก 4 วินาที
-    setTimeout(() => {
-        popup.style.animation = 'slideOutNotification 0.5s ease-in-out forwards';
-        setTimeout(() => {
-            if (popup.parentNode) {
-                popup.parentNode.removeChild(popup);
-            }
-        }, 500);
-    }, 4000);
-
-    // แสดงการแจ้งเตือนปกติด้วยไอคอน
-    showImportantNotification(`ปลดล็อค: ${achievement.name} (${getRarityText(achievement.rarity)})`, 'achievement', achievement.icon);
+    // ✅ แสดงเฉพาะ notification เท่านั้น (ไม่สร้าง popup)
+    showImportantNotification(`🏆 ปลดล็อค: ${achievement.name} (${getRarityText(achievement.rarity)})`, 'achievement', achievement.icon);
     playSound('victory');
+
+    // ❌ ลบโค้ดสร้าง popup ทั้งหมดออก
 }
 
 // ฟังก์ชันแปลงระดับความหายากเป็นข้อความ
@@ -581,13 +587,15 @@ function giveDailyReward(today, isFirstTime) {
         streak: gameState.streakCount
     });
 
-    // แสดงการแจ้งเตือน
+    // แสดงการแจ้งเตือนเพียงครั้งเดียวผ่าน showDailyRewardNotification
     showDailyRewardNotification(reward, isFirstTime);
 
     // บันทึกข้อมูล
     autoSave();
 
     console.log(`🎁 Daily Reward: ${reward.coins} coins (Streak: ${gameState.streakCount})`);
+
+    // ไม่ต้องมี alert() หรือการแจ้งเตือนอื่นๆ ที่นี่
 }
 
 // ฟังก์ชันคำนวณรางวัล
@@ -619,10 +627,20 @@ function calculateDailyReward() {
     };
 }
 
-// ฟังก์ชันแสดงการแจ้งเตือนรางวัล
+let dailyNotificationShown = false;
+
+// ฟังก์ชันแสดงการแจ้งเตือนรางวัล - แก้ไขให้แสดงแค่ใน notification container
 function showDailyRewardNotification(reward, isFirstTime) {
     let message = '';
     let icon = '🎁';
+
+    if (dailyNotificationShown) {
+        return;
+    }
+    dailyNotificationShown = true;
+    setTimeout(() => {
+        dailyNotificationShown = false;
+    }, 5000);
 
     if (isFirstTime) {
         message = `ยินดีต้อนรับ! 🎉 รับ ${reward.coins} เหรียญฟรี!`;
@@ -640,32 +658,14 @@ function showDailyRewardNotification(reward, isFirstTime) {
         }
     }
 
-    // สร้าง notification พิเศษสำหรับ daily reward
-    const notification = document.createElement('div');
-    notification.classList.add('notification', 'success', 'daily-reward');
-    notification.innerHTML = `
-        <div class="notification-icon">${icon}</div>
-        <div class="notification-text">
-            <div class="reward-title">${isFirstTime ? 'ยินดีต้อนรับ!' : 'รางวัลประจำวัน!'}</div>
-            <div class="reward-amount">+${reward.coins} 🪙</div>
-            ${reward.streak > 1 ? `<div class="reward-streak">🔥 ${reward.streak} วันต่อเนื่อง!</div>` : ''}
-        </div>
-    `;
-
-    if (selectors.notificationContainer) {
-        selectors.notificationContainer.appendChild(notification);
-
-        // Animation
-        setTimeout(() => notification.classList.add('show'), 100);
-        setTimeout(() => {
-            notification.classList.remove('show');
-            notification.classList.add('hide');
-            setTimeout(() => notification.remove(), 500);
-        }, 5000);
-    }
+    // แสดงเฉพาะใน notification system เท่านั้น (ไม่สร้าง element เพิ่ม)
+    showImportantNotification(message, 'success', icon);
 
     // แสดง particle effect
     createCoinParticles();
+
+    // ลบส่วนที่สร้าง notification element เพิ่มเติมออก
+    // เพราะ showImportantNotification จัดการให้แล้ว
 }
 
 // ฟังก์ชันสร้าง particle effect สำหรับเหรียญ
@@ -989,6 +989,14 @@ function startGame() {
         return;
     }
 
+    // ในฟังก์ชัน startGame()
+    if (gameState.mathMode === 'beginner') {
+        // ให้คำใบ้ฟรี 2 ครั้ง
+        gameState.freeHints = 2;
+        // เวลาเพิ่มพิเศษ
+        gameState.timeLeft += 30;
+    }
+
     // ถ้าเลือกโหมดแล้ว ให้ซ่อนหน้าเลือกโหมด
     const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
     const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
@@ -1013,16 +1021,22 @@ function startGame() {
     const currentQuestions = currentMode.questions.slice();
 
     // คำนวณจำนวนคู่ตามด่าน (เพิ่มความยากแบบไม่รู้จบ)
-    const basePairs = 4; // เริ่มที่ 4 คู่
+    const basePairs = 4;
+    const levelMultiplier = Math.min(gameState.level / 15, 2); // ช้าลง
+    const calculatedPairs = Math.min(
+        basePairs + Math.floor(levelMultiplier * 4), // เพิ่มช้าลง
+        config.scaling.maxPairs
+    );
     const maxPairs = config.scaling.maxPairs;
     const levelCap = config.scaling.levelCap;
 
     // คำนวณจำนวนคู่: เพิ่มขึ้นตามด่าน แต่ไม่เกินค่าสูงสุด
     let pairsMultiplier = Math.min(gameState.level / 10, levelCap / 10);
-    let calculatedPairs = Math.min(
-        basePairs + Math.floor(pairsMultiplier * 6),
-        maxPairs
-    );
+
+    // เวลาที่เพิ่มขึ้นแบบค่อยเป็นค่อยไป
+    const baseTime = 75; // เพิ่มเวลาเริ่มต้น
+    const timeReduction = Math.min(gameState.level * 0.3, 35); // ลดช้าลง
+    gameState.timeLeft = Math.max(baseTime - timeReduction, config.scaling.minTime);
 
     // ทำให้จำนวนคู่เป็นเลขคู่เสมอ
     const cardsPerLevel = calculatedPairs % 2 === 0 ? calculatedPairs : calculatedPairs - 1;
@@ -1030,9 +1044,7 @@ function startGame() {
     totalPairs = requiredPairs;
 
     // คำนวณเวลาเริ่มต้นตามความยาก
-    const baseTime = 60;
     const minTime = config.scaling.minTime;
-    const timeReduction = Math.min(gameState.level * 0.5, 30); // ลดได้สูงสุด 30 วินาที
     gameState.timeLeft = Math.max(baseTime - timeReduction, minTime);
 
     console.log(`🎮 ด่าน ${gameState.level}: ${requiredPairs} คู่, เวลา ${gameState.timeLeft} วินาที`);
@@ -1068,6 +1080,42 @@ function startGame() {
 
     updateDisplay();
 }
+
+// เพิ่มโหมดฝึกหัด
+const practiceModes = {
+    addition: {
+        name: "ฝึกบวก",
+        icon: "➕",
+        questions: generateAdditionQuestions(20)
+    },
+    subtraction: {
+        name: "ฝึกลบ",
+        icon: "➖",
+        questions: generateSubtractionQuestions(20)
+    },
+    multiplication: {
+        name: "ฝึกคูณ",
+        icon: "✖️",
+        questions: generateMultiplicationQuestions(20)
+    },
+    division: {
+        name: "ฝึกหาร",
+        icon: "➗",
+        questions: generateDivisionQuestions(20)
+    }
+};
+
+function generateAdditionQuestions(count) {
+    const questions = [];
+    for (let i = 0; i < count; i++) {
+        const a = Math.floor(Math.random() * 10) + 1;
+        const b = Math.floor(Math.random() * 10) + 1;
+        questions.push({ q: `${a} + ${b}`, a: (a + b).toString() });
+    }
+    return questions;
+}
+
+
 
 // Create Card Elements
 function createCardElements(layout) {
@@ -1878,10 +1926,12 @@ function updateAchievements() {
     achievementsList.forEach(ach => {
         if (ach.condition() && !gameState.achievements.includes(ach.id)) {
             gameState.achievements.push(ach.id);
-            showAchievementUnlocked(ach);
+            showAchievementUnlocked(ach); // ← เรียกแค่ฟังก์ชันนี้ครั้งเดียว
 
             // บันทึกเกมเมื่อได้ achievement ใหม่
             autoSave();
+
+            // ❌ ไม่ต้องมี showImportantNotification ซ้ำที่นี่
         }
     });
 

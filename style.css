@@ -2525,7 +2525,7 @@ body.freeze-effect {
     background: linear-gradient(135deg, rgba(24, 40, 72, 0.95), rgba(75, 108, 183, 0.95));
     color: #ffffff;
     padding: 30px 20px 20px;
-    margin-top: 190px;
+    margin-top: 8px;
     border-top: 3px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     position: relative;
@@ -2539,13 +2539,12 @@ body.freeze-effect {
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        #667eea 20%, 
-        #764ba2 50%, 
-        #667eea 80%, 
-        transparent 100%
-    );
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #667eea 20%,
+            #764ba2 50%,
+            #667eea 80%,
+            transparent 100%);
 }
 
 .footer-content {
@@ -2654,28 +2653,29 @@ body.freeze-effect {
 /* Responsive Design */
 @media (max-width: 768px) {
     .game-footer {
+        margin-top: 230px;
         padding: 25px 15px 15px;
     }
-    
+
     .footer-content {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .footer-section {
         padding: 10px;
         text-align: center;
     }
-    
+
     .footer-section h4::after {
         left: 50%;
         transform: translateX(-50%);
     }
-    
+
     .footer-links a:hover {
         transform: translateY(-2px);
     }
-    
+
     .game-footer::after {
         font-size: 6em;
         bottom: -15px;
@@ -2685,22 +2685,23 @@ body.freeze-effect {
 
 @media (max-width: 480px) {
     .game-footer {
+        margin-top: 170px;
         padding: 20px 10px 10px;
     }
-    
+
     .footer-section h4 {
         font-size: 1.1em;
     }
-    
+
     .footer-section p {
         font-size: 0.85em;
     }
-    
+
     .footer-links a {
         padding: 6px 10px;
         font-size: 0.9em;
     }
-    
+
     .game-footer::after {
         font-size: 4em;
         bottom: -10px;
@@ -2714,6 +2715,7 @@ body.freeze-effect {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2724,10 +2726,21 @@ body.freeze-effect {
     animation: fadeInUpFooter 0.6s ease-out backwards;
 }
 
-.footer-section:nth-child(1) { animation-delay: 0.1s; }
-.footer-section:nth-child(2) { animation-delay: 0.2s; }
-.footer-section:nth-child(3) { animation-delay: 0.3s; }
-.footer-section:nth-child(4) { animation-delay: 0.4s; }
+.footer-section:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.footer-section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.footer-section:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.footer-section:nth-child(4) {
+    animation-delay: 0.4s;
+}
 
 /* Hover effects for desktop */
 @media (min-width: 1024px) {
@@ -2735,9 +2748,19 @@ body.freeze-effect {
         color: #ffffff;
         transition: color 0.3s ease;
     }
-    
+
     .footer-section:hover h4::after {
         width: 100%;
         transition: width 0.3s ease;
     }
+}
+
+/* เพิ่มสไตล์สำหรับโหมดง่ายพิเศษ */
+.difficulty-badge.very-easy {
+    background: #28a745;
+    font-size: 0.7em;
+}
+
+.math-mode-card[data-difficulty="very-easy"] {
+    background: linear-gradient(135deg, #28a745, #20c997);
 }

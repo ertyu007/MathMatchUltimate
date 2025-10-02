@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Match Ultimate</title>
+    <title>Math Match Ultimate - เกมคณิตศาสตร์สำหรับทุกคน</title>
     <link rel="stylesheet" href="style.css">
 
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <!-- Favicon and Meta Tags -->
+    <link rel="icon" type="image/png" href="https://ertyu007.github.io/MathMatchUltimate//favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -25,11 +26,6 @@
     <meta name="twitter:description" content="เล่นเกมคณิตศาสตร์ที่ท้าทายและสนุกไปกับ Math Match Ultimate!" />
     <meta name="twitter:image" content="https://ertyu007.github.io/MathMatchUltimate/web-app-manifest-192x192.png" />
     <meta name="twitter:card" content="summary_large_image" />
-
-    <!-- If you have a specific image for sharing -->
-    <meta property="og:image" content="https://ertyu007.github.io/MathMatchUltimate/web-app-manifest-192x192.png" />
-    <meta name="twitter:image" content="https://ertyu007.github.io/MathMatchUltimate/web-app-manifest-192x192.png" />
-
 </head>
 
 <body class="theme-default">
@@ -78,46 +74,66 @@
                 <h1>🎮 Math Match Ultimate 🎮</h1>
             </div>
             <div class="game-board-wrapper">
-                <!-- เพิ่มส่วนเลือกโหมดที่นี่ -->
+                <!-- ส่วนเลือกโหมด -->
                 <div id="mathModeSelection-desktop" class="math-mode-selection-inline active">
                     <div class="mode-selection-container-inline">
                         <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
-                        <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
+                        <p class="selection-subtitle">เลือกโหมดที่เหมาะกับระดับความสามารถของคุณ</p>
                         <div class="math-modes-grid-inline">
-                            <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
-                                <div class="mode-icon">➕</div>
-                                <h3>พื้นฐาน</h3>
-                                <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
+                            <!-- โหมดพื้นฐานสำหรับผู้เริ่มต้น -->
+                            <div class="math-mode-card" data-mode="beginner" data-difficulty="very-easy">
+                                <div class="mode-icon">👶</div>
+                                <h3>เริ่มต้น</h3>
+                                <p class="mode-description">บวกลบเลขง่ายๆ สำหรับผู้เริ่มต้น (ง่ายมาก)</p>
+                                <div class="difficulty-badge very-easy">ง่ายมาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="practice" data-difficulty="easy">
+                                <div class="mode-icon">🏫</div>
+                                <h3>ฝึกหัด</h3>
+                                <p class="mode-description">ฝึกบวกลบคูณหารพื้นฐาน (ง่าย)</p>
                                 <div class="difficulty-badge easy">ง่าย</div>
                             </div>
-                            <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
+                            <!-- โหมดตามระดับชั้น -->
+                            <div class="math-mode-card" data-mode="m1" data-difficulty="easy">
                                 <div class="mode-icon">🔢</div>
-                                <h3>ขั้นสูง</h3>
-                                <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
+                                <h3>มัธยม 1</h3>
+                                <p class="mode-description">จำนวนเต็ม, เศษส่วน, พีชคณิตพื้นฐาน (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="m2" data-difficulty="easy">
+                                <div class="mode-icon">📐</div>
+                                <h3>มัธยม 2</h3>
+                                <p class="mode-description">สมการเชิงเส้น, อัตราส่วน, พีธากอรัส (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="m3" data-difficulty="medium">
+                                <div class="mode-icon">📊</div>
+                                <h3>มัธยม 3</h3>
+                                <p class="mode-description">พหุนาม, สมการกำลังสอง, ตรีโกณมิติ (ปานกลาง)</p>
                                 <div class="difficulty-badge medium">ปานกลาง</div>
                             </div>
-                            <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
-                                <div class="mode-icon">❗</div>
-                                <h3>แฟกทอเรียล</h3>
-                                <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
-                                <div class="difficulty-badge hard">ยาก</div>
-                            </div>
-                            <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
-                                <div class="mode-icon">π</div>
-                                <h3>ค่าคงที่</h3>
-                                <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
+                            <div class="math-mode-card" data-mode="m4" data-difficulty="medium">
+                                <div class="mode-icon">🧮</div>
+                                <h3>มัธยม 4</h3>
+                                <p class="mode-description">จำนวนจริง, เอกซ์โพเนนเชียล, ฟังก์ชัน (ปานกลาง)</p>
                                 <div class="difficulty-badge medium">ปานกลาง</div>
                             </div>
-                            <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
-                                <div class="mode-icon">⅓</div>
-                                <h3>เศษส่วน</h3>
-                                <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
+                            <div class="math-mode-card" data-mode="m5" data-difficulty="hard">
+                                <div class="mode-icon">📈</div>
+                                <h3>มัธยม 5</h3>
+                                <p class="mode-description">แคลคูลัส, จำนวนเชิงซ้อน, เวกเตอร์ (ยาก)</p>
                                 <div class="difficulty-badge hard">ยาก</div>
                             </div>
-                            <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
-                                <div class="mode-icon">🎲</div>
-                                <h3>ผสมผสาน</h3>
-                                <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
+                            <div class="math-mode-card" data-mode="m6" data-difficulty="challenging">
+                                <div class="mode-icon">🎓</div>
+                                <h3>มัธยม 6</h3>
+                                <p class="mode-description">แคลคูลัสขั้นสูง, อนุกรม, จำนวนเชิงซ้อนขั้นสูง (ท้าทาย)</p>
+                                <div class="difficulty-badge challenging">ท้าทาย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="olympiad" data-difficulty="challenging">
+                                <div class="mode-icon">🏆</div>
+                                <h3>โอลิมปิก</h3>
+                                <p class="mode-description">โจทย์ปัญหาคณิตศาสตร์แข่งขัน (ท้าทาย)</p>
                                 <div class="difficulty-badge challenging">ท้าทาย</div>
                             </div>
                         </div>
@@ -192,46 +208,66 @@
         </div>
         <div class="game-area">
             <div class="game-board-wrapper">
-                <!-- เพิ่มส่วนเลือกโหมดที่นี่ -->
+                <!-- ส่วนเลือกโหมด -->
                 <div id="mathModeSelection-mobile" class="math-mode-selection-inline active">
                     <div class="mode-selection-container-inline">
                         <h2>🎯 เลือกโหมดคณิตศาสตร์</h2>
-                        <p class="selection-subtitle">เลือกโหมดที่คุณต้องการเล่น</p>
+                        <p class="selection-subtitle">เลือกโหมดที่เหมาะกับระดับความสามารถของคุณ</p>
                         <div class="math-modes-grid-inline">
-                            <div class="math-mode-card" data-mode="basic" data-difficulty="easy">
-                                <div class="mode-icon">➕</div>
-                                <h3>พื้นฐาน</h3>
-                                <p class="mode-description">บวก ลบ คูณ หาร (ง่าย)</p>
+                            <!-- โหมดพื้นฐานสำหรับผู้เริ่มต้น -->
+                            <div class="math-mode-card" data-mode="beginner" data-difficulty="very-easy">
+                                <div class="mode-icon">👶</div>
+                                <h3>เริ่มต้น</h3>
+                                <p class="mode-description">บวกลบเลขง่ายๆ สำหรับผู้เริ่มต้น (ง่ายมาก)</p>
+                                <div class="difficulty-badge very-easy">ง่ายมาก</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="practice" data-difficulty="easy">
+                                <div class="mode-icon">🏫</div>
+                                <h3>ฝึกหัด</h3>
+                                <p class="mode-description">ฝึกบวกลบคูณหารพื้นฐาน (ง่าย)</p>
                                 <div class="difficulty-badge easy">ง่าย</div>
                             </div>
-                            <div class="math-mode-card" data-mode="advanced" data-difficulty="medium">
+                            <!-- โหมดตามระดับชั้น -->
+                            <div class="math-mode-card" data-mode="m1" data-difficulty="easy">
                                 <div class="mode-icon">🔢</div>
-                                <h3>ขั้นสูง</h3>
-                                <p class="mode-description">เลขยกกำลัง รากที่สอง (ปานกลาง)</p>
+                                <h3>มัธยม 1</h3>
+                                <p class="mode-description">จำนวนเต็ม, เศษส่วน, พีชคณิตพื้นฐาน (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="m2" data-difficulty="easy">
+                                <div class="mode-icon">📐</div>
+                                <h3>มัธยม 2</h3>
+                                <p class="mode-description">สมการเชิงเส้น, อัตราส่วน, พีธากอรัส (ง่าย)</p>
+                                <div class="difficulty-badge easy">ง่าย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="m3" data-difficulty="medium">
+                                <div class="mode-icon">📊</div>
+                                <h3>มัธยม 3</h3>
+                                <p class="mode-description">พหุนาม, สมการกำลังสอง, ตรีโกณมิติ (ปานกลาง)</p>
                                 <div class="difficulty-badge medium">ปานกลาง</div>
                             </div>
-                            <div class="math-mode-card" data-mode="factorial" data-difficulty="hard">
-                                <div class="mode-icon">❗</div>
-                                <h3>แฟกทอเรียล</h3>
-                                <p class="mode-description">เช่น 5! = 120, 3!×4! (ยาก)</p>
-                                <div class="difficulty-badge hard">ยาก</div>
-                            </div>
-                            <div class="math-mode-card" data-mode="constants" data-difficulty="medium">
-                                <div class="mode-icon">π</div>
-                                <h3>ค่าคงที่</h3>
-                                <p class="mode-description">π≈3.14, e≈2.72, φ≈1.62 (ปานกลาง)</p>
+                            <div class="math-mode-card" data-mode="m4" data-difficulty="medium">
+                                <div class="mode-icon">🧮</div>
+                                <h3>มัธยม 4</h3>
+                                <p class="mode-description">จำนวนจริง, เอกซ์โพเนนเชียล, ฟังก์ชัน (ปานกลาง)</p>
                                 <div class="difficulty-badge medium">ปานกลาง</div>
                             </div>
-                            <div class="math-mode-card" data-mode="fractions" data-difficulty="hard">
-                                <div class="mode-icon">⅓</div>
-                                <h3>เศษส่วน</h3>
-                                <p class="mode-description">1/2+1/3, 3/4×2/3 (ยาก)</p>
+                            <div class="math-mode-card" data-mode="m5" data-difficulty="hard">
+                                <div class="mode-icon">📈</div>
+                                <h3>มัธยม 5</h3>
+                                <p class="mode-description">แคลคูลัส, จำนวนเชิงซ้อน, เวกเตอร์ (ยาก)</p>
                                 <div class="difficulty-badge hard">ยาก</div>
                             </div>
-                            <div class="math-mode-card" data-mode="mixed" data-difficulty="challenging">
-                                <div class="mode-icon">🎲</div>
-                                <h3>ผสมผสาน</h3>
-                                <p class="mode-description">ทุกประเภทรวมกัน (ท้าทาย)</p>
+                            <div class="math-mode-card" data-mode="m6" data-difficulty="challenging">
+                                <div class="mode-icon">🎓</div>
+                                <h3>มัธยม 6</h3>
+                                <p class="mode-description">แคลคูลัสขั้นสูง, อนุกรม, จำนวนเชิงซ้อนขั้นสูง (ท้าทาย)</p>
+                                <div class="difficulty-badge challenging">ท้าทาย</div>
+                            </div>
+                            <div class="math-mode-card" data-mode="olympiad" data-difficulty="challenging">
+                                <div class="mode-icon">🏆</div>
+                                <h3>โอลิมปิก</h3>
+                                <p class="mode-description">โจทย์ปัญหาคณิตศาสตร์แข่งขัน (ท้าทาย)</p>
                                 <div class="difficulty-badge challenging">ท้าทาย</div>
                             </div>
                         </div>
@@ -410,14 +446,14 @@
 
             <div class="footer-section">
                 <h4>📚 ระดับการศึกษา</h4>
-                <p>มัธยมศึกษาปีที่ 1-6</p>
-                <p>โหมดโอลิมปิกคณิตศาสตร์</p>
+                <p>เริ่มต้น - โอลิมปิก</p>
+                <p>เหมาะสำหรับทุกวัย</p>
             </div>
 
             <div class="footer-section">
                 <h4>👨‍💻 ผู้พัฒนา</h4>
                 <p>พัฒนาโดยทีมงาน ertyu007</p>
-                <p>เวอร์ชัน 1.1 Ultimate</p>
+                <p>เวอร์ชัน 1.2 Ultimate</p>
             </div>
 
             <div class="footer-section">
