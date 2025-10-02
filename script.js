@@ -1,4 +1,4 @@
-// script.js - Ultimate Edition (รวมระบบเลือกโหมดคณิตศาสตร์และ achievements แบบสนุกๆ)
+// script.js - Ultimate Edition with Auto Save System
 
 // Configuration
 const config = {
@@ -271,6 +271,200 @@ const achievementsList = [
     }
 ];
 
+// =============================================
+// 💾 AUTO SAVE SYSTEM
+// =============================================
+
+// บันทึกเกม
+function saveGame() {
+    try {
+        const saveData = {
+            // ข้อมูลพื้นฐาน
+            coins: gameState.coins,
+            level: gameState.level,
+            bestCombo: gameState.bestCombo,
+            
+            // สถิติ
+            totalGames: gameState.totalGames,
+            perfectClears: gameState.perfectClears,
+            powerupsUsed: gameState.powerupsUsed,
+            wrongMatches: gameState.wrongMatches,
+            totalTimeFreeze: gameState.totalTimeFreeze,
+            fastestClear: gameState.fastestClear,
+            
+            // ความสำเร็จ
+            achievements: [...gameState.achievements],
+            modesCompleted: { ...gameState.modesCompleted },
+            
+            // การตั้งค่า
+            theme: gameState.theme,
+            mode: gameState.mode,
+            soundEnabled: gameState.soundEnabled,
+            mathMode: gameState.mathMode,
+            
+            // เวลาบันทึก
+            lastSave: Date.now(),
+            version: '1.0'
+        };
+        
+        localStorage.setItem('mathMatchUltimateSave', JSON.stringify(saveData));
+        console.log('💾 บันทึกเกมเรียบร้อยแล้ว');
+        return true;
+    } catch (e) {
+        console.error('❌ ไม่สามารถบันทึกเกมได้:', e);
+        return false;
+    }
+}
+
+// โหลดเกม
+function loadGame() {
+    try {
+        const saved = localStorage.getItem('mathMatchUltimateSave');
+        if (saved) {
+            const saveData = JSON.parse(saved);
+            
+            // ตรวจสอบเวอร์ชันและโหลดข้อมูล
+            if (saveData.version === '1.0') {
+                // โหลดข้อมูลกลับเข้า gameState
+                gameState.coins = saveData.coins || 100;
+                gameState.level = saveData.level || 1;
+                gameState.bestCombo = saveData.bestCombo || 0;
+                gameState.totalGames = saveData.totalGames || 0;
+                gameState.perfectClears = saveData.perfectClears || 0;
+                gameState.powerupsUsed = saveData.powerupsUsed || 0;
+                gameState.wrongMatches = saveData.wrongMatches || 0;
+                gameState.totalTimeFreeze = saveData.totalTimeFreeze || 0;
+                gameState.fastestClear = saveData.fastestClear || 999;
+                gameState.achievements = saveData.achievements || [];
+                gameState.modesCompleted = saveData.modesCompleted || {
+                    basic: 0, advanced: 0, factorial: 0, 
+                    constants: 0, fractions: 0, mixed: 0
+                };
+                gameState.theme = saveData.theme || 'default';
+                gameState.mode = saveData.mode || 'normal';
+                gameState.soundEnabled = saveData.soundEnabled !== undefined ? saveData.soundEnabled : true;
+                gameState.mathMode = saveData.mathMode || null;
+                
+                console.log('📂 โหลดเกมเรียบร้อยแล้ว');
+                showNotification('📂 โหลดข้อมูลเกมเรียบร้อยแล้ว!', 'success');
+                return true;
+            }
+        }
+    } catch (e) {
+        console.error('❌ ไม่สามารถโหลดเกมได้:', e);
+    }
+    return false;
+}
+
+// บันทึกอัตโนมัติ
+function autoSave() {
+    if (gameState.isGameActive) {
+        // บันทึกทุก 30 วินาทีขณะเล่นเกม
+        if (gameState.timeLeft % 30 === 0) {
+            saveGame();
+        }
+    } else {
+        saveGame();
+    }
+}
+
+// รีเซ็ตข้อมูลเกม (สำหรับระบบลับเท่านั้น)
+function resetGameData() {
+    if (confirm('⚠️ ต้องการล้างข้อมูลเกมทั้งหมดใช่ไหม? การกระทำนี้ไม่สามารถย้อนกลับได้!')) {
+        localStorage.removeItem('mathMatchUltimateSave');
+        
+        // รีเซ็ต gameState
+        gameState.coins = 100;
+        gameState.level = 1;
+        gameState.bestCombo = 0;
+        gameState.totalGames = 0;
+        gameState.perfectClears = 0;
+        gameState.powerupsUsed = 0;
+        gameState.wrongMatches = 0;
+        gameState.totalTimeFreeze = 0;
+        gameState.fastestClear = 999;
+        gameState.achievements = [];
+        gameState.modesCompleted = {
+            basic: 0, advanced: 0, factorial: 0, 
+            constants: 0, fractions: 0, mixed: 0
+        };
+        gameState.theme = 'default';
+        gameState.mode = 'normal';
+        gameState.soundEnabled = true;
+        gameState.mathMode = null;
+        
+        updateDisplay();
+        updateAchievements();
+        changeTheme('default');
+        
+        showNotification('🗑️ ล้างข้อมูลเกมเรียบร้อยแล้ว!', 'info');
+        console.log('🗑️ รีเซ็ตข้อมูลเกมเรียบร้อยแล้ว');
+    }
+}
+
+// ส่งออกข้อมูล
+function exportSaveData() {
+    try {
+        const saveData = localStorage.getItem('mathMatchUltimateSave');
+        if (saveData) {
+            const blob = new Blob([saveData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'math-match-ultimate-save.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('📤 ส่งออกข้อมูลเรียบร้อยแล้ว!', 'success');
+        } else {
+            showNotification('❌ ไม่มีข้อมูลที่จะส่งออก', 'error');
+        }
+    } catch (e) {
+        console.error('❌ ไม่สามารถส่งออกข้อมูลได้:', e);
+        showNotification('❌ ไม่สามารถส่งออกข้อมูลได้', 'error');
+    }
+}
+
+// นำเข้าข้อมูล
+function importSaveData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    
+                    // ตรวจสอบว่าเป็นข้อมูลที่ถูกต้อง
+                    if (importedData.version === '1.0') {
+                        localStorage.setItem('mathMatchUltimateSave', JSON.stringify(importedData));
+                        loadGame();
+                        showNotification('📥 นำเข้าข้อมูลเรียบร้อยแล้ว!', 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('❌ ไฟล์ไม่ถูกต้องหรือไม่รองรับ', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ ไฟล์ไม่ถูกต้อง:', error);
+                    showNotification('❌ ไฟล์ไม่ถูกต้อง', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+// =============================================
+// 🎮 GAME FUNCTIONS (อัปเดตให้มี Auto Save)
+// =============================================
+
 // ฟังก์ชันสำหรับเลือกโหมดคณิตศาสตร์
 function selectMathMode(modeKey) {
     const modeCards = document.querySelectorAll('.math-mode-card');
@@ -296,6 +490,12 @@ function selectMathMode(modeKey) {
 
         // บันทึกโหมดที่เลือก
         gameState.mathMode = modeKey;
+        
+        // บันทึกเกมอัตโนมัติ
+        autoSave();
+        
+        // เล่นเสียงเมื่อเลือกโหมด
+        playSound('select');
     }
 }
 
@@ -314,6 +514,7 @@ function getDifficultyText(difficulty) {
 function startGameWithSelectedMode() {
     if (!gameState.mathMode) {
         showNotification('กรุณาเลือกโหมดคณิตศาสตร์ก่อนเริ่มเกม!', 'warning');
+        playSound('wrong');
         return;
     }
 
@@ -323,6 +524,12 @@ function startGameWithSelectedMode() {
         modeSelection.classList.remove('active');
     }
 
+    // บันทึกเกมอัตโนมัติ
+    autoSave();
+    
+    // เล่นเสียงเริ่มเกม
+    playSound('start');
+    
     // เริ่มเกม
     startGame();
 }
@@ -341,7 +548,7 @@ function startGame() {
     matchedPairs = 0;
     flippedCards = [];
     gameState.combo = 0;
-    gameState.startTime = Date.now(); // บันทึกเวลาเริ่มเกม
+    gameState.startTime = Date.now();
 
     // ใช้โหมดคณิตศาสตร์ที่เลือก
     const currentMode = mathModesDB[gameState.mathMode];
@@ -415,7 +622,6 @@ function createCardElements(layout) {
 }
 
 function updateControlButtons() {
-    // กำหนดข้อความปุ่มตาม layout และสถานะ pause
     const buttonText = {
         desktop: {
             paused: '▶️ เล่นต่อ',
@@ -427,19 +633,16 @@ function updateControlButtons() {
         }
     };
 
-    // วนลูปผ่าน layout เดสก์ท็อปและโมบาย
     ['desktop', 'mobile'].forEach(layout => {
         const startBtn = document.getElementById(`startBtn-${layout}`);
         const pauseBtn = document.getElementById(`pauseBtn-${layout}`);
 
-        // อัปเดตปุ่มเริ่มเกม (แสดงเมื่อเกมไม่เริ่ม, ซ่อนเมื่อเริ่ม)
         if (startBtn) {
             startBtn.style.display = gameState.isGameActive ? 'none' : 'inline-block';
         } else {
             console.warn(`startBtn-${layout} not found`);
         }
 
-        // อัปเดตปุ่มหยุด/เล่นต่อ (แสดงเมื่อเกมเริ่ม, เปลี่ยนข้อความตามสถานะ pause)
         if (pauseBtn) {
             pauseBtn.style.display = gameState.isGameActive ? 'inline-block' : 'none';
             pauseBtn.textContent = gameState.isPaused
@@ -539,11 +742,14 @@ function checkMatch() {
         if (matchedPairs === totalPairs) {
             setTimeout(levelComplete, 500);
         }
+        
+        // บันทึกเกมอัตโนมัติเมื่อจับคู่ได้
+        autoSave();
     } else {
         card1.classList.add('wrong');
         card2.classList.add('wrong');
         playSound('wrong');
-        gameState.wrongMatches++; // นับการจับคู่ผิด
+        gameState.wrongMatches++;
 
         setTimeout(() => {
             card1.classList.remove('flipped', 'wrong');
@@ -567,6 +773,7 @@ function checkMatch() {
 
     if (gameState.combo > gameState.bestCombo) {
         gameState.bestCombo = gameState.combo;
+        autoSave(); // บันทึกเมื่อมีคอมโบใหม่
     }
 
     updateDisplay();
@@ -582,6 +789,12 @@ function startTimer() {
             gameState.timeLeft--;
             updateDisplay();
             lastTime = currentTime;
+            
+            // บันทึกอัตโนมัติทุก 30 วินาที
+            if (gameState.timeLeft % 30 === 0) {
+                autoSave();
+            }
+            
             if (gameState.timeLeft <= 0) {
                 gameOver();
                 return;
@@ -622,6 +835,9 @@ function levelComplete() {
     gameState.score += timeBonus;
     gameState.coins += coinsEarned;
 
+    // บันทึกเกมเมื่อจบด่าน
+    saveGame();
+    
     showVictory(stars, coinsEarned);
     playSound('victory');
     updateAchievements();
@@ -631,6 +847,10 @@ function levelComplete() {
 function gameOver() {
     cancelAnimationFrame(timer);
     gameState.isGameActive = false;
+    
+    // บันทึกเกมเมื่อเกมโอเวอร์
+    saveGame();
+    
     playSound('gameover');
 
     if (selectors.gameOverScore) selectors.gameOverScore.textContent = gameState.score;
@@ -690,11 +910,15 @@ function closeVictory() {
 // Next Level
 function nextLevel() {
     gameState.level++;
+    
+    // บันทึกเกมเมื่อเลื่อนด่าน
+    autoSave();
+    
     closeVictory();
     setTimeout(() => startGame(), 500);
 }
 
-// Reset Game
+// Reset Game (เฉพาะเซสชันปัจจุบัน)
 function resetGame() {
     cancelAnimationFrame(timer);
     matchedPairs = 0;
@@ -737,8 +961,11 @@ function usePowerup(type) {
     }
 
     gameState.coins -= cost;
-    gameState.powerupsUsed++; // นับจำนวนการใช้ไอเทม
+    gameState.powerupsUsed++;
     playSound('powerup');
+    
+    // บันทึกเกมเมื่อใช้ไอเทม
+    autoSave();
 
     switch (type) {
         case 'time':
@@ -755,7 +982,7 @@ function usePowerup(type) {
             break;
         case 'freeze':
             freezeTimer();
-            gameState.totalTimeFreeze += 5; // นับเวลาหยุดสะสม
+            gameState.totalTimeFreeze += 5;
             showNotification('❄️ เวลาหยุด 5 วิ!', 'info');
             break;
     }
@@ -853,19 +1080,19 @@ function togglePause() {
     if (selectors.pauseModal) {
         selectors.pauseModal.classList.toggle('active', gameState.isPaused);
     }
-    playSound('click');
+    playSound('button');
 }
 
 // Open Settings
 function openSettings() {
     if (selectors.settingsModal) selectors.settingsModal.classList.add('active');
-    playSound('click');
+    playSound('button');
 }
 
 // Close Settings
 function closeSettings() {
     if (selectors.settingsModal) selectors.settingsModal.classList.remove('active');
-    playSound('click');
+    playSound('button');
 }
 
 // Change Theme
@@ -873,15 +1100,23 @@ function changeTheme(themeName) {
     document.body.className = `theme-${themeName}`;
     gameState.theme = themeName;
     updateDisplay();
-    playSound('click');
+    
+    // บันทึกเกมเมื่อเปลี่ยนธีม
+    autoSave();
+    
+    playSound('select');
 }
 
 // Change Mode
 function changeMode(modeName) {
     gameState.mode = modeName;
     updateDisplay();
+    
+    // บันทึกเกมเมื่อเปลี่ยนโหมด
+    autoSave();
+    
     showNotification(`โหมดเกมเปลี่ยนเป็น: ${modeName}`, 'info');
-    playSound('click');
+    playSound('select');
 }
 
 // Toggle Sound
@@ -894,7 +1129,10 @@ function toggleSound() {
         btn.textContent = btn.classList.contains('btn-icon') ? icon : text;
     });
 
-    playSound('click');
+    // บันทึกเกมเมื่อเปลี่ยนการตั้งค่าเสียง
+    autoSave();
+    
+    playSound('toggle');
     showNotification(gameState.soundEnabled ? '🔊 เปิดเสียง' : '🔇 ปิดเสียง', 'info');
 }
 
@@ -909,7 +1147,11 @@ function playSound(type) {
         start: { freq: 1000, duration: 0.5 },
         victory: { freq: 1500, duration: 1 },
         gameover: { freq: 400, duration: 0.5 },
-        powerup: { freq: 900, duration: 0.4 }
+        powerup: { freq: 900, duration: 0.4 },
+        button: { freq: 500, duration: 0.15 },
+        select: { freq: 700, duration: 0.2 },
+        toggle: { freq: 600, duration: 0.1 },
+        hover: { freq: 400, duration: 0.1 }
     };
 
     const oscillator = audioCtx.createOscillator();
@@ -926,6 +1168,12 @@ function playSound(type) {
 
     oscillator.start();
     oscillator.stop(audioCtx.currentTime + sounds[type].duration);
+}
+
+// ฟังก์ชันเล่นเสียงเมื่อโฮเวอร์เหนือปุ่ม (สำหรับเดสก์ท็อป)
+function playHoverSound() {
+    if (!gameState.soundEnabled || !audioCtx) return;
+    playSound('hover');
 }
 
 // Show Notification
@@ -1039,6 +1287,9 @@ function updateAchievements() {
         if (ach.condition() && !gameState.achievements.includes(ach.id)) {
             gameState.achievements.push(ach.id);
             showAchievementUnlocked(ach);
+            
+            // บันทึกเกมเมื่อได้ achievement ใหม่
+            autoSave();
         }
     });
 
@@ -1070,6 +1321,7 @@ function togglePowerupsSection() {
         selectors.powerupsContainer.classList.add('expanded');
         selectors.powerupsToggle.innerHTML = '⚡ ไอเทมพิเศษ ▲';
     }
+    playSound('toggle');
 }
 
 // Close Pause Modal
@@ -1147,9 +1399,17 @@ document.addEventListener('DOMContentLoaded', initMobileScroll);
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     initAudio();
+    loadGame(); // โหลดข้อมูลเกมเมื่อเริ่มต้น
     changeTheme(gameState.theme);
     updateDisplay();
     updateAchievements();
+
+    // เพิ่ม Event Listeners สำหรับเอฟเฟกต์เสียงโฮเวอร์ (เฉพาะเดสก์ท็อป)
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+        document.querySelectorAll('button, .math-mode-card, .theme-btn, .mode-card, .powerup, .powerup-mobile').forEach(element => {
+            element.addEventListener('mouseenter', playHoverSound);
+        });
+    }
 
     // Controls
     ['desktop', 'mobile'].forEach(layout => {
@@ -1158,57 +1418,121 @@ document.addEventListener('DOMContentLoaded', () => {
         const settingsBtn = document.getElementById(`settingsBtn-${layout}`);
         const soundBtn = document.getElementById(`soundBtn-${layout}`);
 
-        if (startBtn) startBtn.addEventListener('click', startGameWithSelectedMode);
-        if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
-        if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
-        if (soundBtn) soundBtn.addEventListener('click', toggleSound);
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                playSound('button');
+                startGameWithSelectedMode();
+            });
+        }
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                playSound('button');
+                togglePause();
+            });
+        }
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                playSound('button');
+                openSettings();
+            });
+        }
+        if (soundBtn) {
+            soundBtn.addEventListener('click', () => {
+                toggleSound();
+            });
+        }
     });
 
     // Modal Buttons
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', closeSettings);
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', () => {
+            playSound('button');
+            closeSettings();
+        });
+    }
 
     const nextLevelBtn = document.getElementById('nextLevelBtn');
-    if (nextLevelBtn) nextLevelBtn.addEventListener('click', nextLevel);
+    if (nextLevelBtn) {
+        nextLevelBtn.addEventListener('click', () => {
+            playSound('button');
+            nextLevel();
+        });
+    }
 
     const returnMenuBtn = document.getElementById('returnMenuBtn');
-    if (returnMenuBtn) returnMenuBtn.addEventListener('click', closeVictory);
+    if (returnMenuBtn) {
+        returnMenuBtn.addEventListener('click', () => {
+            playSound('button');
+            closeVictory();
+        });
+    }
 
     const restartBtn = document.getElementById('restartBtn');
-    if (restartBtn) restartBtn.addEventListener('click', restartGame);
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+            playSound('button');
+            restartGame();
+        });
+    }
 
     const returnMenuGameOverBtn = document.getElementById('returnMenuGameOverBtn');
-    if (returnMenuGameOverBtn) returnMenuGameOverBtn.addEventListener('click', closeGameOver);
+    if (returnMenuGameOverBtn) {
+        returnMenuGameOverBtn.addEventListener('click', () => {
+            playSound('button');
+            closeGameOver();
+        });
+    }
 
     const resumeBtn = document.getElementById('resumeBtn');
-    if (resumeBtn) resumeBtn.addEventListener('click', togglePause);
+    if (resumeBtn) {
+        resumeBtn.addEventListener('click', () => {
+            playSound('button');
+            togglePause();
+        });
+    }
 
     const exitGameBtn = document.getElementById('exitGameBtn');
-    if (exitGameBtn) exitGameBtn.addEventListener('click', closePauseModal);
+    if (exitGameBtn) {
+        exitGameBtn.addEventListener('click', () => {
+            playSound('button');
+            closePauseModal();
+        });
+    }
 
     // Powerups
     document.querySelectorAll('.powerup, .powerup-mobile').forEach(powerup => {
         powerup.addEventListener('click', () => {
             if (!powerup.classList.contains('disabled')) {
+                playSound('button');
                 usePowerup(powerup.dataset.type);
+            } else {
+                playSound('wrong');
             }
         });
     });
 
     // Theme selector
     document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => changeTheme(btn.dataset.theme));
+        btn.addEventListener('click', () => {
+            playSound('select');
+            changeTheme(btn.dataset.theme);
+        });
     });
 
     // Mode selector
     document.querySelectorAll('.mode-card').forEach(card => {
-        card.addEventListener('click', () => changeMode(card.dataset.mode));
+        card.addEventListener('click', () => {
+            playSound('select');
+            changeMode(card.dataset.mode);
+        });
     });
 
     // Modal close on background click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                playSound('button');
                 modal.classList.remove('active');
             }
         });
@@ -1216,12 +1540,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Powerups toggle
     if (selectors.powerupsToggle) {
-        selectors.powerupsToggle.addEventListener('click', togglePowerupsSection);
+        selectors.powerupsToggle.addEventListener('click', () => {
+            playSound('toggle');
+            togglePowerupsSection();
+        });
     }
 
     // Event Listeners สำหรับการเลือกโหมดคณิตศาสตร์
     document.querySelectorAll('.math-mode-card').forEach(card => {
         card.addEventListener('click', () => {
+            playSound('select');
             selectMathMode(card.dataset.mode);
         });
     });
@@ -1229,18 +1557,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listener สำหรับปุ่มเริ่มเกมด้วยโหมดที่เลือก
     const startGameWithModeBtn = document.getElementById('startGameWithMode');
     if (startGameWithModeBtn) {
-        startGameWithModeBtn.addEventListener('click', startGameWithSelectedMode);
+        startGameWithModeBtn.addEventListener('click', () => {
+            playSound('button');
+            startGameWithSelectedMode();
+        });
     }
 });
-
-
-// ==============================================================================================
-// ==============================================================================================
-// ==============================================================================================
-// ==============================================================================================
-// ==============================================================================================
-// ==============================================================================================
-
 
 // =============================================
 // 🎮 STEALTH HACK SYSTEM (Hidden Mode)
@@ -1249,36 +1571,37 @@ document.addEventListener('DOMContentLoaded', () => {
 (function () {
     'use strict';
 
-    // ซ่อนโค้ดโดยใช้ชื่อฟังก์ชันที่ดูปกติ
     const stealthSystem = {
-        // ระบบช่วยเหลือพื้นฐาน (ดูเหมือนฟีเจอร์ปกติ)
         helper: {
             addResources() {
                 gameState.coins += 5000;
                 updateDisplay();
+                autoSave();
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มทรัพยากร');
             },
 
             boostProgress() {
                 gameState.level = Math.min(gameState.level + 5, 100);
                 updateDisplay();
+                autoSave();
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มความคืบหน้า');
             },
 
             extraTime() {
                 gameState.timeLeft += 60;
                 updateDisplay();
+                autoSave();
                 console.log('🔧 ระบบช่วยเหลือ: เพิ่มเวลา');
             }
         },
 
-        // ระบบพัฒนาการ (ดูเหมือนฟีเจอร์พัฒนาเกม)
         development: {
             completeObjectives() {
                 matchedPairs = totalPairs;
                 if (gameState.isGameActive) {
                     setTimeout(() => levelComplete(), 100);
                 }
+                autoSave();
                 console.log('🔧 ระบบพัฒนา: บรรลุเป้าหมาย');
             },
 
@@ -1289,6 +1612,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 updateAchievements();
+                autoSave();
                 console.log('🔧 ระบบพัฒนา: ปลดล็อคฟีเจอร์');
             },
 
@@ -1296,11 +1620,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameState.bestCombo = 50;
                 gameState.perfectClears = 30;
                 gameState.totalGames = 100;
+                autoSave();
                 console.log('🔧 ระบบพัฒนา: ปรับปรุงประสิทธิภาพ');
             }
         },
 
-        // ระบบทดสอบ (ดูเหมือนฟีเจอร์ทดสอบสำหรับ developer)
         testing: {
             previewAllCards() {
                 if (gameState.isGameActive) {
@@ -1337,12 +1661,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         setTimeout(() => levelComplete(), 500);
                     }
                     updateDisplay();
+                    autoSave();
                     console.log('🔧 ระบบทดสอบ: เสร็จสิ้นอัตโนมัติ');
                 }
             },
 
             testEffects() {
-                // เอฟเฟกต์ทดสอบที่ดูเหมือนฟีเจอร์ปกติ
                 for (let i = 0; i < 10; i++) {
                     setTimeout(() => {
                         createParticles(document.querySelector('.card') || document.body);
@@ -1356,35 +1680,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // ฟังก์ชันเปิดใช้งานระบบลับ (ใช้รหัสลับ)
     function activateSecretSystem(code) {
         const secretCodes = {
-            '1337': () => { // Leet code
+            '1337': () => {
                 stealthSystem.helper.addResources();
                 stealthSystem.development.unlockFeatures();
                 return '🚀 ระบบความช่วยเหลือขั้นสูงเปิดใช้งาน';
             },
-            '9999': () => { // Max stats code
+            '9999': () => {
                 gameState.coins = 99999;
                 gameState.level = 99;
                 gameState.score = 99999;
                 updateDisplay();
+                autoSave();
                 return '💎 สถิติสูงสุดเปิดใช้งาน';
             },
-            '0420': () => { // Fun code
+            '0420': () => {
                 stealthSystem.testing.testEffects();
                 document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                 return '🎨 โหมดศิลปะเปิดใช้งาน';
             },
-            '7777': () => { // Lucky code
+            '7777': () => {
                 stealthSystem.development.optimizePerformance();
                 stealthSystem.helper.extraTime();
                 return '🍀 โหมดนำโชคเปิดใช้งาน';
             },
-            '1984': () => { // Big Brother code
+            '1984': () => {
                 stealthSystem.testing.previewAllCards();
                 stealthSystem.testing.autoComplete();
                 return '👁️ โหมดมองเห็นเปิดใช้งาน';
             },
-            '0000': () => { // Reset code
-                resetEverythingStealth();
+            '0000': () => {
+                resetGameData();
                 return '🔄 ระบบรีเซ็ตเปิดใช้งาน';
             }
         };
@@ -1398,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    // การแจ้งเตือนแบบลับ (ไม่ดึงดูดความสนใจ)
+    // การแจ้งเตือนแบบลับ
     function showStealthNotification(message) {
         const notification = document.createElement('div');
         notification.textContent = '💡 ' + message;
@@ -1434,44 +1759,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // รีเซ็ตแบบลับ
-    function resetEverythingStealth() {
-        gameState.score = 0;
-        gameState.coins = 100;
-        gameState.level = 1;
-        gameState.timeLeft = 60;
-        gameState.achievements = [];
-        gameState.totalGames = 0;
-        gameState.perfectClears = 0;
-        gameState.bestCombo = 0;
-
-        Object.keys(gameState.modesCompleted).forEach(mode => {
-            gameState.modesCompleted[mode] = 0;
-        });
-
-        updateDisplay();
-        resetGame();
-    }
-
-    // ระบบตรวจจับคีย์ลับ (Hidden key detection)
+    // ระบบตรวจจับคีย์ลับ
     let secretSequence = '';
-    const secretPattern = '38384040373937396665'; // Konami code ในรูปแบบ key codes
+    const secretPattern = '38384040373937396665';
 
     function handleSecretKey(event) {
         secretSequence += event.keyCode;
 
-        // รีเซ็ตลำดับถ้ายาวเกินไป
         if (secretSequence.length > 20) {
             secretSequence = secretSequence.slice(-20);
         }
 
-        // ตรวจสอบรหัสลับ
         if (secretSequence.includes(secretPattern)) {
-            secretSequence = ''; // รีเซ็ตลำดับ
+            secretSequence = '';
             openSecretPanel();
         }
 
-        // รหัสลับแบบง่าย (Shift + `)
         if (event.shiftKey && event.key === '`') {
             openSecretPanel();
         }
@@ -1509,6 +1812,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button onclick="stealthSystem.development.unlockFeatures()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Unlock All</button>
                 <button onclick="stealthSystem.testing.previewAllCards()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Show Cards</button>
                 <button onclick="stealthSystem.testing.autoComplete()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Auto Complete</button>
+                <button onclick="exportSaveData()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Export Data</button>
+                <button onclick="importSaveData()" style="background: #333; color: #0f0; border: 1px solid #0f0; padding: 5px; border-radius: 3px; cursor: pointer;">Import Data</button>
             </div>
             <div style="text-align: center;">
                 <button onclick="this.parentElement.parentElement.remove()" style="background: #f00; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer;">Close</button>
@@ -1517,7 +1822,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.body.appendChild(panel);
 
-        // ตรวจจับการใส่รหัส
         const codeInput = panel.querySelector('#secretCode');
         codeInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
@@ -1534,7 +1838,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         codeInput.focus();
 
-        // ปิดแผงเมื่อคลิกภายนอก
         panel.addEventListener('click', function (e) {
             if (e.target === this) {
                 this.remove();
@@ -1544,20 +1847,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // เริ่มต้นระบบลับ
     function initStealthSystem() {
-        // เพิ่ม event listener สำหรับคีย์ลับ
         document.addEventListener('keydown', handleSecretKey);
 
-        // ซ่อนฟังก์ชันใน console โดยใช้ชื่อที่ดูปกติ
         window._gameHelper = stealthSystem.helper;
         window._devTools = stealthSystem.development;
         window._testMode = stealthSystem.testing;
         window._secret = activateSecretSystem;
         window._devPanel = openSecretPanel;
 
-        console.log('ถ้ามึงหมดความอดทนมึงก็โกงเกมกูซ่ะ กุเพิ่มฟังก์ชั่นโกงให้ล่ะ 😏😏');
+        console.log('🔧 ระบบลับพร้อมใช้งาน - พิมพ์ _devPanel() ในคอนโซลเพื่อเปิดแผงควบคุม');
     }
 
-    // เริ่มต้นระบบเมื่อหน้าเว็บโหลดเสร็จ
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initStealthSystem);
     } else {
