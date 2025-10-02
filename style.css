@@ -2757,10 +2757,10 @@ body.freeze-effect {
 
 /* เพิ่มสไตล์สำหรับโหมดง่ายพิเศษ */
 .difficulty-badge.very-easy {
-    background: #28a745;
+    background: #a72828;
     font-size: 0.7em;
 }
 
-.math-mode-card[data-difficulty="very-easy"] {
-    background: linear-gradient(135deg, #28a745, #20c997);
-}
+/* .math-mode-card[data-difficulty="very-easy"] {
+    background: linear-gradient(135deg, rgba(24, 40, 72, 0.95), rgba(75, 108, 183, 0.95));
+} */
