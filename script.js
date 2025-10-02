@@ -1,5 +1,5 @@
 // script.js - Ultimate Edition with 9999 Levels, Daily Rewards, and Cheat System
-// Full Version - รวมโค้ดทั้งหมดแล้ว
+// Full Version - รวมโค้ดทั้งหมดแล้ว + FIXED BUGS + FIXED START/RESTART ISSUES + FIXED PAUSE/RESUME
 
 // Configuration
 const config = {
@@ -43,7 +43,7 @@ let gameState = {
     bestCombo: 0,
     mode: 'normal',
     theme: 'default',
-    mathMode: null,
+    mathMode: 'beginner',
     achievements: [],
     totalGames: 0,
     perfectClears: 0,
@@ -365,7 +365,7 @@ const achievementsList = [
 ];
 
 // =============================================
-// 🎮 CORE GAME FUNCTIONS
+// 🎮 CORE GAME FUNCTIONS - FIXED VERSION
 // =============================================
 
 function recommendMathMode() {
@@ -436,9 +436,9 @@ function processNotificationQueue() {
             }
             setTimeout(() => {
                 processNotificationQueue();
-            }, 300);
-        }, 500);
-    }, 3000);
+            }, 100);
+        }, 300);
+    }, 2000);
 }
 
 function showAchievementUnlocked(achievement) {
@@ -644,7 +644,7 @@ function formatDate(dateString) {
 }
 
 // =============================================
-// 💾 AUTO SAVE SYSTEM
+// 💾 AUTO SAVE SYSTEM - FIXED
 // =============================================
 
 function saveGame() {
@@ -670,12 +670,14 @@ function saveGame() {
             totalLogins: gameState.totalLogins,
             claimedRewards: [...gameState.claimedRewards],
             lastSave: Date.now(),
-            version: '1.1'
+            version: '1.2'
         };
 
         localStorage.setItem('mathMatchUltimateSave', JSON.stringify(saveData));
         return true;
     } catch (e) {
+        console.error('ไม่สามารถบันทึกเกมได้:', e);
+        showImportantNotification('❌ ไม่สามารถบันทึกเกมได้', 'error');
         return false;
     }
 }
@@ -686,7 +688,7 @@ function loadGame() {
         if (saved) {
             const saveData = JSON.parse(saved);
 
-            if (saveData.version === '1.0' || saveData.version === '1.1') {
+            if (saveData.version === '1.0' || saveData.version === '1.1' || saveData.version === '1.2') {
                 gameState.coins = saveData.coins || 100;
                 gameState.level = saveData.level || 1;
                 gameState.bestCombo = saveData.bestCombo || 0;
@@ -704,7 +706,7 @@ function loadGame() {
                 gameState.theme = saveData.theme || 'default';
                 gameState.mode = saveData.mode || 'normal';
                 gameState.soundEnabled = saveData.soundEnabled !== undefined ? saveData.soundEnabled : true;
-                gameState.mathMode = saveData.mathMode || null;
+                gameState.mathMode = saveData.mathMode || 'beginner';
                 gameState.lastLoginDate = saveData.lastLoginDate || null;
                 gameState.streakCount = saveData.streakCount || 0;
                 gameState.totalLogins = saveData.totalLogins || 0;
@@ -712,8 +714,12 @@ function loadGame() {
 
                 return true;
             }
+        } else {
+            gameState.mathMode = 'beginner';
         }
     } catch (e) {
+        console.error('Load game error:', e);
+        gameState.mathMode = 'beginner';
     }
     return false;
 }
@@ -749,7 +755,7 @@ function resetGameData() {
         gameState.theme = 'default';
         gameState.mode = 'normal';
         gameState.soundEnabled = true;
-        gameState.mathMode = null;
+        gameState.mathMode = 'beginner';
         gameState.lastLoginDate = null;
         gameState.streakCount = 0;
         gameState.totalLogins = 0;
@@ -764,7 +770,7 @@ function resetGameData() {
 }
 
 // =============================================
-// 🎮 MODAL MANAGEMENT SYSTEM
+// 🎮 MODAL MANAGEMENT SYSTEM - FIXED VERSION
 // =============================================
 
 let activeModal = null;
@@ -776,61 +782,67 @@ function openModal(modalElement) {
 
     activeModal = modalElement;
 
-    // หยุดเวลาเกม
-    if (gameState.isGameActive && !gameState.isPaused) {
+    const shouldPauseGame = modalElement.id === 'pauseModal' ||
+        modalElement.id === 'victoryModal' ||
+        modalElement.id === 'gameOverModal';
+
+    if (gameState.isGameActive && !gameState.isPaused && shouldPauseGame) {
         gameState.wasPausedBeforeModal = false;
         gameState.isPaused = true;
     } else {
         gameState.wasPausedBeforeModal = gameState.isPaused;
     }
 
-    // ล็อกพื้นหลัง
     document.body.classList.add('modal-open');
 
-    // แสดง modal
-    modalElement.classList.add('active');
+    modalElement.style.display = 'flex';
+    setTimeout(() => {
+        modalElement.classList.add('active');
+    }, 10);
 
-    // ป้องกันการคลิกพื้นหลัง
-    modalElement.style.pointerEvents = 'auto';
-
-    // อัพเดตปุ่ม pause
     updateControlButtons();
-
-    console.log('🔒 Modal เปิด - เวลาหยุด, พื้นหลังล็อก');
 }
 
 function closeModal(modalElement) {
     modalElement.classList.remove('active');
-    document.body.classList.remove('modal-open');
+    setTimeout(() => {
+        modalElement.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        activeModal = null;
+    }, 300);
 
-    // คืนสถานะการเล่นเกม
-    if (gameState.isGameActive) {
-        if (!gameState.wasPausedBeforeModal) {
-            gameState.isPaused = false;
-        }
+    const shouldResumeGame = modalElement.id === 'pauseModal' ||
+        modalElement.id === 'victoryModal' ||
+        modalElement.id === 'gameOverModal';
+
+    if (gameState.isGameActive && shouldResumeGame && !gameState.wasPausedBeforeModal) {
+        gameState.isPaused = false;
+        startTimer();
     }
 
-    activeModal = null;
-
-    // อัพเดตปุ่ม pause
     updateControlButtons();
-
-    console.log('🔓 Modal ปิด - เวลาเริ่มใหม่, พื้นหลังปลดล็อก');
 }
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(modal => {
         closeModal(modal);
     });
+    activeModal = null;
 }
 
-// ตรวจสอบว่ามี modal เปิดอยู่หรือไม่
 function isAnyModalOpen() {
-    return document.querySelector('.modal.active') !== null;
+    if (!activeModal) return false;
+
+    const allowedModals = ['settingsModal', 'creditsModal', 'privacyModal'];
+    if (allowedModals.includes(activeModal.id)) {
+        return false;
+    }
+
+    return true;
 }
 
 // =============================================
-// 🎮 GAME FUNCTIONS - 9999 LEVELS
+// 🎮 GAME FUNCTIONS - 9999 LEVELS - FIXED VERSION
 // =============================================
 
 function selectMathMode(modeKey) {
@@ -873,20 +885,47 @@ function getDifficultyText(difficulty) {
 }
 
 function startGameWithSelectedMode() {
-    if (!gameState.mathMode) {
-        showImportantNotification('กรุณาเลือกโหมดคณิตศาสตร์ก่อนเริ่มเกม!', 'warning', '🎯');
+    if (activeModal &&
+        activeModal.id !== 'settingsModal' &&
+        activeModal.id !== 'creditsModal' &&
+        activeModal.id !== 'privacyModal') {
+        showImportantNotification('ปิดหน้าต่างปัจจุบันก่อนเริ่มเกม!', 'warning', '⚠️');
         playSound('wrong');
         return;
     }
 
+    if (!gameState.mathMode) {
+        gameState.mathMode = 'beginner';
+        selectMathMode('beginner');
+        showImportantNotification('เลือกโหมดเริ่มต้นให้อัตโนมัติ', 'info', '🤖');
+    }
+
+    closeAllModals();
+
     const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
     const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
 
-    if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
-    if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
+    if (modeSelectionDesktop) {
+        modeSelectionDesktop.classList.remove('active');
+        modeSelectionDesktop.style.display = 'none';
+    }
+    if (modeSelectionMobile) {
+        modeSelectionMobile.classList.remove('active');
+        modeSelectionMobile.style.display = 'none';
+    }
+
+    if (selectors.gameBoardDesktop) {
+        selectors.gameBoardDesktop.style.display = 'grid';
+        selectors.gameBoardDesktop.innerHTML = '';
+    }
+    if (selectors.gameBoardMobile) {
+        selectors.gameBoardMobile.style.display = 'grid';
+        selectors.gameBoardMobile.innerHTML = '';
+    }
 
     autoSave();
     playSound('start');
+    closeAllModals();
 
     const mode = mathModesDB[gameState.mathMode];
     showImportantNotification(`เริ่มเกมโหมด: ${mode.name}`, 'success', mode.icon);
@@ -907,10 +946,20 @@ function startGame() {
     const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
     const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
 
-    if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
-    if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
+    if (modeSelectionDesktop) {
+        modeSelectionDesktop.classList.remove('active');
+        modeSelectionDesktop.style.display = 'none';
+    }
+    if (modeSelectionMobile) {
+        modeSelectionMobile.classList.remove('active');
+        modeSelectionMobile.style.display = 'none';
+    }
 
-    if (gameState.isGameActive) return;
+    if (gameState.isGameActive) {
+        console.log('⚠️ เกมกำลังทำงานอยู่แล้ว');
+        return;
+    }
+
     if (!selectors.gameBoardDesktop || !selectors.gameBoardMobile) {
         console.error('Game board elements not found');
         return;
@@ -925,35 +974,67 @@ function startGame() {
     const currentMode = mathModesDB[gameState.mathMode];
     const currentQuestions = currentMode.questions.slice();
 
-    const basePairs = 4;
-    const levelMultiplier = Math.min(gameState.level / 15, 2);
+    const modeDifficulty = currentMode.difficulty;
+    const basePairs = config.difficulties[modeDifficulty].pairs;
+
+    const pairIncrease = Math.floor(Math.log2(gameState.level + 1));
     const calculatedPairs = Math.min(
-        basePairs + Math.floor(levelMultiplier * 4),
+        basePairs + pairIncrease,
         config.scaling.maxPairs
     );
 
-    const baseTime = 75;
-    const timeReduction = Math.floor(Math.min(gameState.level * 0.3, 35)); // ปัดเศษลง
+    console.log(`🎯 โหมด: ${currentMode.name}, คู่เริ่มต้น: ${basePairs}, คู่คำนวณ: ${calculatedPairs}, ระดับ: ${gameState.level}`);
+
+    const baseTime = config.difficulties[modeDifficulty].time;
+    const timeReduction = Math.floor(Math.min(
+        gameState.level * 0.8,
+        baseTime - config.scaling.minTime
+    ));
     gameState.timeLeft = Math.max(baseTime - timeReduction, config.scaling.minTime);
 
     const cardsPerLevel = calculatedPairs % 2 === 0 ? calculatedPairs : calculatedPairs - 1;
     const requiredPairs = cardsPerLevel / 2;
     totalPairs = requiredPairs;
 
+    console.log(`🕒 เวลา: ${gameState.timeLeft} วินาที, คู่ทั้งหมด: ${totalPairs} คู่`);
+
     let selectedPairs = [];
+
     while (selectedPairs.length < requiredPairs) {
+        if (currentQuestions.length === 0) {
+            currentQuestions.push(...mathModesDB[gameState.mathMode].questions.slice());
+        }
         const randomIndex = Math.floor(Math.random() * currentQuestions.length);
         const pair = currentQuestions.splice(randomIndex, 1)[0];
         if (pair) selectedPairs.push(pair);
+
+        if (selectedPairs.length > mathModesDB[gameState.mathMode].questions.length * 2) {
+            console.warn('⚠️  มีคำถามไม่พอ ใช้คำถามซ้ำ');
+            break;
+        }
     }
 
     cards = [];
     selectedPairs.forEach((pair, index) => {
-        cards.push({ id: `q${index}`, value: pair.q, answer: pair.a, index: index, type: 'question' });
-        cards.push({ id: `a${index}`, value: pair.a, answer: pair.a, index: index, type: 'answer' });
+        cards.push({
+            id: `q${index}`,
+            value: pair.q,
+            answer: pair.a,
+            index: index,
+            type: 'question'
+        });
+        cards.push({
+            id: `a${index}`,
+            value: pair.a,
+            answer: pair.a,
+            index: index,
+            type: 'answer'
+        });
     });
 
     cards.sort(() => Math.random() - 0.5);
+
+    console.log(`🎴 สร้างการ์ดสำเร็จ: ${cards.length} ใบ, ${totalPairs} คู่`);
 
     createCardElements('desktop');
     createCardElements('mobile');
@@ -970,8 +1051,21 @@ function createCardElements(layout) {
     if (!gameBoard) return;
 
     gameBoard.innerHTML = '';
-    const boardSize = Math.sqrt(cards.length);
-    gameBoard.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+
+    const totalCards = cards.length;
+    const columns = Math.ceil(Math.sqrt(totalCards));
+
+    gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+    gameBoard.style.gap = '8px';
+    gameBoard.style.padding = '10px';
+
+    if (totalCards > 20) {
+        gameBoard.classList.add('high-density');
+    } else {
+        gameBoard.classList.remove('high-density');
+    }
+
+    console.log(`📐 Layout ${layout}: ${columns} columns สำหรับ ${totalCards} การ์ด`);
 
     cards.forEach(cardData => {
         const card = document.createElement('div');
@@ -986,12 +1080,24 @@ function createCardElements(layout) {
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
 
+        let fontSize;
+        if (totalCards > 20) {
+            fontSize = 'clamp(9px, 2.5vw, 16px)';
+        } else if (totalCards > 16) {
+            fontSize = 'clamp(12px, 2.8vw, 18px)';
+        } else {
+            fontSize = 'clamp(14px, 3.2vw, 20px)';
+        }
+        card.style.fontSize = fontSize;
+        card.style.lineHeight = '1.2';
+
         card.addEventListener('click', () => flipCard(card));
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 flipCard(card);
             }
         });
+
         gameBoard.appendChild(card);
     });
 }
@@ -1010,12 +1116,15 @@ function updateControlButtons() {
 
     ['desktop', 'mobile'].forEach(layout => {
         const pauseBtn = document.getElementById(`pauseBtn-${layout}`);
-
         if (pauseBtn) {
             pauseBtn.style.display = gameState.isGameActive ? 'inline-block' : 'none';
-            pauseBtn.textContent = gameState.isPaused
-                ? buttonText[layout].paused
+            pauseBtn.textContent = gameState.isPaused 
+                ? buttonText[layout].paused 
                 : buttonText[layout].playing;
+            
+            pauseBtn.setAttribute('aria-label', 
+                gameState.isPaused ? 'เล่นต่อเกม' : 'หยุดเกมชั่วคราว'
+            );
         }
     });
 }
@@ -1026,7 +1135,6 @@ function updateDisplay() {
         return;
     }
 
-    // แก้ไขการแสดงผลเวลา - ปัดเศษเป็นจำนวนเต็ม
     const displayTime = Math.floor(gameState.timeLeft);
     selectors.timerDesktop.textContent = displayTime;
     selectors.scoreDesktop.textContent = gameState.score;
@@ -1034,7 +1142,7 @@ function updateDisplay() {
     selectors.coinsDesktop.textContent = gameState.coins;
     selectors.pairsDesktop.textContent = `${matchedPairs}/${totalPairs}`;
 
-    selectors.timerMobile.textContent = displayTime; // ใช้ค่าเดียวกัน
+    selectors.timerMobile.textContent = displayTime;
     selectors.scoreMobile.textContent = gameState.score;
     selectors.levelMobile.textContent = gameState.level;
     selectors.coinsMobile.textContent = `💰${gameState.coins}`;
@@ -1058,14 +1166,17 @@ function updateDisplay() {
 }
 
 function flipCard(card) {
-    if (isAnyModalOpen()) {
-        playSound('wrong');
+    if (activeModal &&
+        activeModal.id !== 'settingsModal' &&
+        activeModal.id !== 'creditsModal' &&
+        activeModal.id !== 'privacyModal') {
         return;
     }
 
     if (!canFlip || card.classList.contains('flipped') ||
         card.classList.contains('matched') || gameState.isPaused ||
-        !gameState.isGameActive || flippedCards.length >= 2) {
+        !gameState.isGameActive || flippedCards.length >= 2 ||
+        flippedCards.includes(card)) {
         return;
     }
 
@@ -1149,38 +1260,31 @@ function checkMatch() {
 }
 
 function startTimer() {
-    if (timer) cancelAnimationFrame(timer);
-    lastTime = null;
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
 
-    function tick(currentTime) {
-        if (!lastTime) lastTime = currentTime;
-
-        const elapsed = currentTime - lastTime;
-
-        // หยุดเวลาเมื่อมี modal เปิดหรือเกมหยุด
-        const shouldStopTime = gameState.isPaused || freezeTime || !gameState.isGameActive || isAnyModalOpen();
-
-        if (elapsed >= 1000 && !shouldStopTime) {
+    timer = setInterval(() => {
+        if (!gameState.isPaused && !freezeTime && gameState.isGameActive) {
             gameState.timeLeft -= 1;
             updateDisplay();
-            lastTime = currentTime;
+
+            if (gameState.timeLeft <= 0) {
+                gameOver();
+                clearInterval(timer);
+                return;
+            }
 
             if (gameState.timeLeft % 30 === 0) {
                 autoSave();
             }
-
-            if (gameState.timeLeft <= 0) {
-                gameOver();
-                return;
-            }
         }
-        timer = requestAnimationFrame(tick);
-    }
-    timer = requestAnimationFrame(tick);
+    }, 1000);
 }
 
 function levelComplete() {
-    cancelAnimationFrame(timer);
+    if (timer) clearInterval(timer);
     gameState.isGameActive = false;
     gameState.totalGames++;
 
@@ -1258,7 +1362,7 @@ function unlockMilestoneAchievements() {
 }
 
 function gameOver() {
-    cancelAnimationFrame(timer);
+    if (timer) clearInterval(timer);
     gameState.isGameActive = false;
 
     saveGame();
@@ -1269,7 +1373,67 @@ function gameOver() {
     if (selectors.gameOverLevel) selectors.gameOverLevel.textContent = gameState.level;
     if (selectors.gameOverCombo) selectors.gameOverCombo.textContent = gameState.bestCombo;
 
-    if (selectors.gameOverModal) selectors.gameOverModal.classList.add('active');
+    const gameOverModal = document.getElementById('gameOverModal');
+    if (gameOverModal) {
+        openModal(gameOverModal);
+    }
+}
+
+function resetGame() {
+    if (timer) clearInterval(timer);
+    matchedPairs = 0;
+    flippedCards = [];
+    cards = [];
+    gameState.combo = 0;
+    gameState.isPaused = false;
+    gameState.isGameActive = false;
+    gameState.score = 0;
+
+    if (gameState.mathMode && mathModesDB[gameState.mathMode]) {
+        const mode = mathModesDB[gameState.mathMode];
+        gameState.timeLeft = config.difficulties[mode.difficulty].time;
+    } else {
+        gameState.timeLeft = 60;
+    }
+
+    if (selectors.gameBoardDesktop) {
+        selectors.gameBoardDesktop.innerHTML = '';
+        selectors.gameBoardDesktop.style.display = 'none';
+    }
+    if (selectors.gameBoardMobile) {
+        selectors.gameBoardMobile.innerHTML = '';
+        selectors.gameBoardMobile.style.display = 'none';
+    }
+
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    });
+
+    const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
+    const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
+
+    if (modeSelectionDesktop) {
+        modeSelectionDesktop.classList.add('active');
+        modeSelectionDesktop.style.display = 'block';
+    }
+    if (modeSelectionMobile) {
+        modeSelectionMobile.classList.add('active');
+        modeSelectionMobile.style.display = 'block';
+    }
+
+    updateControlButtons();
+    updateDisplay();
+
+    console.log('🎮 เกมถูกรีเซ็ตเรียบร้อยแล้ว');
+}
+
+function returnToMainMenu() {
+    closeAllModals();
+    resetGame();
+    updateDisplay();
+    showImportantNotification('กลับสู่เมนูหลักแล้ว', 'info', '🏠');
+    playSound('button');
 }
 
 function closeGameOver() {
@@ -1282,7 +1446,9 @@ function closeGameOver() {
 
 function restartGame() {
     closeGameOver();
-    setTimeout(() => startGame(), 500);
+    setTimeout(() => {
+        startGameWithSelectedMode();
+    }, 500);
 }
 
 function showVictory(stars, coins) {
@@ -1364,54 +1530,29 @@ function nextLevel() {
     closeVictory();
     setTimeout(() => {
         gameState.isGameActive = false;
-
-        const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
-        const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
-
-        if (modeSelectionDesktop) modeSelectionDesktop.classList.remove('active');
-        if (modeSelectionMobile) modeSelectionMobile.classList.remove('active');
-
-        startGame();
+        startGameWithSelectedMode();
     }, 500);
 }
 
-function resetGame() {
-    cancelAnimationFrame(timer);
-    matchedPairs = 0;
-    flippedCards = [];
-    cards = [];
-    gameState.combo = 0;
-    gameState.isPaused = false;
-    gameState.isGameActive = false;
-    gameState.score = 0;
-    gameState.timeLeft = config.difficulties.easy.time;
-
-    if (selectors.gameBoardDesktop) selectors.gameBoardDesktop.innerHTML = '';
-    if (selectors.gameBoardMobile) selectors.gameBoardMobile.innerHTML = '';
-
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('active');
-    });
-
-    const modeSelectionDesktop = document.getElementById('mathModeSelection-desktop');
-    const modeSelectionMobile = document.getElementById('mathModeSelection-mobile');
-
-    if (modeSelectionDesktop) modeSelectionDesktop.classList.add('active');
-    if (modeSelectionMobile) modeSelectionMobile.classList.add('active');
-
-    updateControlButtons();
-    updateDisplay();
-}
-
 function usePowerup(type) {
-    // ไม่สามารถใช้ไอเทมได้เมื่อมี modal เปิด
-    if (isAnyModalOpen()) {
-        showImportantNotification('ปิด modal ก่อนใช้ไอเทม!', 'warning', '⚠️');
+    if (activeModal &&
+        activeModal.id !== 'settingsModal' &&
+        activeModal.id !== 'creditsModal' &&
+        activeModal.id !== 'privacyModal') {
+        showImportantNotification('ปิดหน้าต่างปัจจุบันก่อนใช้ไอเทม!', 'warning', '⚠️');
         return;
     }
 
     if (!gameState.isGameActive) {
         showImportantNotification('เริ่มเกมก่อนใช้ไอเทม!', 'warning', '⚠️');
+        return;
+    }
+
+    const cost = config.powerupCosts[type];
+
+    if (gameState.coins < cost) {
+        showImportantNotification('💰 เหรียญไม่พอ!', 'warning', '💰');
+        playSound('wrong');
         return;
     }
 
@@ -1452,6 +1593,8 @@ function usePowerup(type) {
             gameState.totalTimeFreeze += 5;
             break;
     }
+
+    updateDisplay();
 }
 
 function revealHint() {
@@ -1568,13 +1711,41 @@ function showCombo() {
     }, 1500);
 }
 
+// 🔥 FIX: ฟังก์ชันหยุดเกมและเล่นต่อที่แก้ไขแล้ว
 function togglePause() {
     if (!gameState.isGameActive) return;
+
+    if (activeModal &&
+        activeModal.id !== 'settingsModal' &&
+        activeModal.id !== 'creditsModal' &&
+        activeModal.id !== 'privacyModal') {
+        showImportantNotification('ปิดหน้าต่างปัจจุบันก่อน!', 'warning', '⚠️');
+        return;
+    }
+
     gameState.isPaused = !gameState.isPaused;
     updateControlButtons();
-    if (selectors.pauseModal) {
-        selectors.pauseModal.classList.toggle('active', gameState.isPaused);
+
+    const pauseModal = document.getElementById('pauseModal');
+    
+    if (gameState.isPaused) {
+        openModal(pauseModal);
+    } else {
+        closeModal(pauseModal);
+        startTimer();
     }
+    
+    playSound('button');
+}
+
+function resumeGame() {
+    gameState.isPaused = false;
+    const pauseModal = document.getElementById('pauseModal');
+    if (pauseModal) {
+        closeModal(pauseModal);
+    }
+    startTimer();
+    updateControlButtons();
     playSound('button');
 }
 
@@ -1591,105 +1762,6 @@ function closeSettings() {
     const settingsModal = document.getElementById('settingsModal');
     if (settingsModal) {
         closeModal(settingsModal);
-        playSound('button');
-    }
-}
-
-function showVictory(stars, coins) {
-    if (!selectors.victoryModal || !selectors.starsDisplay) return;
-
-    // ... โค้ดเดิม ...
-
-    const victoryModal = document.getElementById('victoryModal');
-    openModal(victoryModal);
-}
-
-function closeVictory() {
-    const victoryModal = document.getElementById('victoryModal');
-    if (victoryModal) {
-        closeModal(victoryModal);
-    }
-    document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
-    resetGame();
-}
-
-function gameOver() {
-    cancelAnimationFrame(timer);
-    gameState.isGameActive = false;
-
-    saveGame();
-    playSound('gameover');
-
-    if (selectors.gameOverScore) selectors.gameOverScore.textContent = gameState.score;
-    if (selectors.gameOverCoins) selectors.gameOverCoins.textContent = gameState.coins;
-    if (selectors.gameOverLevel) selectors.gameOverLevel.textContent = gameState.level;
-    if (selectors.gameOverCombo) selectors.gameOverCombo.textContent = gameState.bestCombo;
-
-    const gameOverModal = document.getElementById('gameOverModal');
-    if (gameOverModal) {
-        openModal(gameOverModal);
-    }
-}
-
-function closeGameOver() {
-    const gameOverModal = document.getElementById('gameOverModal');
-    if (gameOverModal) {
-        closeModal(gameOverModal);
-    }
-    resetGame();
-}
-
-function togglePause() {
-    if (!gameState.isGameActive) return;
-
-    // ถ้ามี modal เปิดอยู่ ให้ไม่สามารถ pause ได้
-    if (isAnyModalOpen() && !gameState.isPaused) {
-        showImportantNotification('ปิด modal ก่อนเพื่อเล่นเกมต่อ', 'warning', '⚠️');
-        return;
-    }
-
-    gameState.isPaused = !gameState.isPaused;
-    updateControlButtons();
-
-    const pauseModal = document.getElementById('pauseModal');
-    if (pauseModal) {
-        if (gameState.isPaused) {
-            openModal(pauseModal);
-        } else {
-            closeModal(pauseModal);
-        }
-    }
-    playSound('button');
-}
-
-function openCreditsModal() {
-    const creditsModal = document.getElementById('creditsModal');
-    if (creditsModal) {
-        openModal(creditsModal);
-        playSound('button');
-    }
-}
-
-function closeCreditsModal() {
-    const creditsModal = document.getElementById('creditsModal');
-    if (creditsModal) {
-        closeModal(creditsModal);
-        playSound('button');
-    }
-}
-
-function openPrivacyModal() {
-    const privacyModal = document.getElementById('privacyModal');
-    if (privacyModal) {
-        openModal(privacyModal);
-        playSound('button');
-    }
-}
-
-function closePrivacyModal() {
-    const privacyModal = document.getElementById('privacyModal');
-    if (privacyModal) {
-        closeModal(privacyModal);
         playSound('button');
     }
 }
@@ -1727,8 +1799,27 @@ function toggleSound() {
     );
 }
 
+function initAudio() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+            audioCtx = new AudioContext();
+            document.addEventListener('click', () => {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }, { once: true });
+        }
+    }
+}
+
 function playSound(type) {
     if (!gameState.soundEnabled || !audioCtx) return;
+
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
     const sounds = {
         click: { freq: 800, duration: 0.1 },
         flip: { freq: 600, duration: 0.2 },
@@ -1744,20 +1835,27 @@ function playSound(type) {
         hover: { freq: 400, duration: 0.1 }
     };
 
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    const sound = sounds[type];
+    if (!sound) return;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    try {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
 
-    oscillator.type = 'square';
-    oscillator.frequency.setValueAtTime(sounds[type].freq, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
 
-    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + sounds[type].duration);
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(sound.freq, audioCtx.currentTime);
 
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + sounds[type].duration);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + sound.duration);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + sound.duration);
+    } catch (e) {
+        console.error('Audio error:', e);
+    }
 }
 
 function playHoverSound() {
@@ -1833,11 +1931,10 @@ function updateAchievements() {
 }
 
 function togglePowerupsSection() {
-    // ไม่สามารถเปิดปิดไอเทมได้เมื่อมี modal เปิด
     if (isAnyModalOpen()) {
         return;
     }
-    
+
     if (!selectors.powerupsContainer || !selectors.powerupsToggle) return;
     if (selectors.powerupsContainer.classList.contains('expanded')) {
         selectors.powerupsContainer.classList.remove('expanded');
@@ -1855,16 +1952,10 @@ function closePauseModal() {
     resetGame();
 }
 
-function initAudio() {
-    if (!audioCtx && window.AudioContext) {
-        audioCtx = new window.AudioContext();
-    }
-}
-
 function openCreditsModal() {
     const creditsModal = document.getElementById('creditsModal');
     if (creditsModal) {
-        creditsModal.classList.add('active');
+        openModal(creditsModal);
         playSound('button');
     }
 }
@@ -1872,7 +1963,7 @@ function openCreditsModal() {
 function closeCreditsModal() {
     const creditsModal = document.getElementById('creditsModal');
     if (creditsModal) {
-        creditsModal.classList.remove('active');
+        closeModal(creditsModal);
         playSound('button');
     }
 }
@@ -1880,7 +1971,7 @@ function closeCreditsModal() {
 function openPrivacyModal() {
     const privacyModal = document.getElementById('privacyModal');
     if (privacyModal) {
-        privacyModal.classList.add('active');
+        openModal(privacyModal);
         playSound('button');
     }
 }
@@ -1888,7 +1979,7 @@ function openPrivacyModal() {
 function closePrivacyModal() {
     const privacyModal = document.getElementById('privacyModal');
     if (privacyModal) {
-        privacyModal.classList.remove('active');
+        closeModal(privacyModal);
         playSound('button');
     }
 }
@@ -2190,13 +2281,21 @@ function closePrivacyModal() {
 })();
 
 // =============================================
-// 🎮 EVENT LISTENERS
+// 🎮 EVENT LISTENERS - FIXED VERSION
 // =============================================
 
 document.addEventListener('DOMContentLoaded', () => {
     initAudio();
     loadGame();
     changeTheme(gameState.theme);
+
+    if (gameState.mathMode) {
+        selectMathMode(gameState.mathMode);
+    } else {
+        gameState.mathMode = 'beginner';
+        selectMathMode('beginner');
+    }
+
     updateDisplay();
     updateAchievements();
 
@@ -2311,7 +2410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (returnMenuBtn) {
         returnMenuBtn.addEventListener('click', () => {
             playSound('button');
-            closeVictory();
+            returnToMainMenu();
         });
     }
 
@@ -2327,7 +2426,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (returnMenuGameOverBtn) {
         returnMenuGameOverBtn.addEventListener('click', () => {
             playSound('button');
-            closeGameOver();
+            returnToMainMenu();
         });
     }
 
@@ -2335,7 +2434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resumeBtn) {
         resumeBtn.addEventListener('click', () => {
             playSound('button');
-            togglePause();
+            resumeGame();
         });
     }
 
@@ -2343,7 +2442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (exitGameBtn) {
         exitGameBtn.addEventListener('click', () => {
             playSound('button');
-            closePauseModal();
+            returnToMainMenu();
         });
     }
 
@@ -2363,7 +2462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Modal close on background click - แก้ไขใหม่
+    // Modal close on background click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -2373,11 +2472,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ปุ่ม ESC เพื่อปิด modal
+    // ESC key to close modal
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && activeModal) {
-            playSound('button');
-            closeModal(activeModal);
+        if (e.key === 'Escape') {
+            if (activeModal) {
+                playSound('button');
+                closeModal(activeModal);
+            } else if (gameState.isGameActive && !gameState.isPaused) {
+                togglePause();
+            }
         }
     });
 
@@ -2414,4 +2517,6 @@ document.addEventListener('DOMContentLoaded', () => {
             startGameWithSelectedMode();
         });
     }
+
+    console.log('🎮 Math Match Ultimate - เริ่มต้นระบบเรียบร้อยแล้ว!');
 });

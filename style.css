@@ -1122,7 +1122,7 @@ button:active {
 .game-board-wrapper {
     flex: 1;
     display: flex;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
     flex-wrap: wrap;
     align-content: center;
@@ -2685,7 +2685,7 @@ body.freeze-effect {
 
 @media (max-width: 480px) {
     .game-footer {
-        margin-top: 170px;
+        margin-top: 210px;
         padding: 20px 10px 10px;
     }
 
@@ -2828,4 +2828,41 @@ body.modal-open .powerup,
 body.modal-open .powerup-mobile {
     pointer-events: none;
     opacity: 0.6;
+}
+
+/* สำหรับการ์ดจำนวนมาก */
+.game-board.high-density {
+    gap: 4px !important;
+}
+
+.game-board.high-density .card {
+    font-size: clamp(10px, 1.8vw, 14px) !important;
+    min-width: 45px;
+    min-height: 45px;
+}
+
+/* Responsive สำหรับมือถือ */
+@media (max-width: 768px) {
+    .game-board {
+        gap: 4px;
+        padding: 5px;
+    }
+    
+    .game-board .card {
+        font-size: clamp(23px, 2.5vw, 16px) !important;
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-board {
+        gap: 3px;
+    }
+    
+    .game-board .card {
+        font-size: clamp(22px, 2.2vw, 22px) !important;
+        min-width: 35px;
+        min-height: 35px;
+    }
 }
